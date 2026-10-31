@@ -6,10 +6,7 @@ import {
   Filter,
   CheckCircle2,
   AlertTriangle,
-  Clock,
-  Layers,
-  MapPin,
-  GraduationCap
+  Clock
 } from "lucide-react";
 
 const DAYS = ["MON", "TUE", "WED", "THU", "FRI"];
@@ -66,7 +63,7 @@ export default function Timetable({ user }: { user: User }) {
 
   if (!meta) {
     return (
-      <div className="card text-center py-12 text-slate-400 text-xs">
+      <div className="card text-center py-12 text-stone-500 text-xs font-semibold">
         Loading CIT Master Timetable Matrix...
       </div>
     );
@@ -75,16 +72,16 @@ export default function Timetable({ user }: { user: User }) {
   return (
     <div className="space-y-4">
       {/* Filters Bar */}
-      <div className="glass-panel rounded-2xl p-4 border border-slate-800 space-y-3">
-        <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
+      <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs space-y-3 backdrop-blur-md">
+        <div className="flex items-center justify-between text-xs font-bold text-stone-800">
           <div className="flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-indigo-400" />
+            <Filter className="w-3.5 h-3.5 text-[#7B1123]" />
             <span>Schedule Filters & View Controls</span>
           </div>
           {Object.values(f).some(Boolean) && (
             <button
               onClick={() => setF({})}
-              className="text-[11px] text-indigo-400 hover:text-white underline"
+              className="text-[11px] text-[#7B1123] hover:text-stone-900 underline font-semibold"
             >
               Reset Filters
             </button>
@@ -104,12 +101,12 @@ export default function Timetable({ user }: { user: User }) {
       {/* View Switcher & Validation Summary */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="bg-slate-900/80 p-1 rounded-xl border border-slate-800 flex items-center gap-1">
+          <div className="bg-[#FAF5ED] p-1 rounded-xl border border-[#E8DEC8] flex items-center gap-1">
             <button
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                 view === "week"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-[#7B1123] text-white shadow-xs"
+                  : "text-stone-700 hover:text-stone-950 hover:bg-stone-200"
               }`}
               onClick={() => setView("week")}
             >
@@ -117,10 +114,10 @@ export default function Timetable({ user }: { user: User }) {
               Weekly Grid
             </button>
             <button
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                 view === "list"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-[#7B1123] text-white shadow-xs"
+                  : "text-stone-700 hover:text-stone-950 hover:bg-stone-200"
               }`}
               onClick={() => setView("list")}
             >
@@ -128,7 +125,7 @@ export default function Timetable({ user }: { user: User }) {
               List View
             </button>
           </div>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-stone-600 font-mono font-semibold">
             {rows.length} sessions active
           </span>
         </div>
@@ -150,37 +147,37 @@ export default function Timetable({ user }: { user: User }) {
         )}
       </div>
 
-      {err && <p className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">{err}</p>}
+      {err && <p className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-medium">{err}</p>}
 
       {/* Weekly Grid */}
       {view === "week" ? (
-        <div className="overflow-x-auto glass-panel rounded-2xl border border-slate-800 shadow-xl">
+        <div className="overflow-x-auto bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xs backdrop-blur-md">
           <table className="min-w-full text-xs border-collapse">
             <thead>
-              <tr className="bg-slate-900/80 border-b border-slate-800 text-slate-300">
-                <th className="p-3 text-left w-24">Period</th>
+              <tr className="bg-[#FAF5ED] border-b border-[#E8DEC8] text-stone-800">
+                <th className="p-3 text-left w-24 font-bold">Period</th>
                 {DAYS.map((d) => (
-                  <th key={d} className="p-3 text-center border-l border-slate-800/80 font-bold tracking-wider">
+                  <th key={d} className="p-3 text-center border-l border-[#E8DEC8] font-bold tracking-wider">
                     {d}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-[#E8DEC8]">
               {PERIODS.map((p) => {
                 const isLunch = p === 5;
                 return (
-                  <tr key={p} className="hover:bg-slate-900/30 transition-colors">
-                    <td className="p-3 font-semibold text-slate-300 align-top bg-slate-950/40 border-r border-slate-800/80">
-                      <div className="flex items-center gap-1.5 text-indigo-400 font-mono">
+                  <tr key={p} className="hover:bg-[#FAF7F2]/60 transition-colors">
+                    <td className="p-3 font-semibold text-stone-800 align-top bg-[#FAF5ED]/50 border-r border-[#E8DEC8]">
+                      <div className="flex items-center gap-1.5 text-[#7B1123] font-mono font-bold">
                         <Clock className="w-3 h-3" />
                         P{p}
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
+                      <div className="text-[10px] text-stone-500 mt-0.5 font-medium">
                         {p <= 5 ? 7 + p : 8 + p}:00–{p <= 5 ? 8 + p : 9 + p}:00
                       </div>
                       {isLunch && (
-                        <div className="text-[9px] text-amber-400 font-semibold mt-1 uppercase">
+                        <div className="text-[9px] text-amber-800 font-bold mt-1 uppercase bg-amber-100/80 px-1 py-0.5 rounded border border-amber-300 text-center">
                           Lunch 13-14
                         </div>
                       )}
@@ -189,39 +186,39 @@ export default function Timetable({ user }: { user: User }) {
                     {DAYS.map((d) => {
                       const items = grid[`${d}-${p}`] ?? [];
                       return (
-                        <td key={d} className="p-1.5 border-l border-slate-800/60 align-top min-w-[170px]">
+                        <td key={d} className="p-1.5 border-l border-[#E8DEC8] align-top min-w-[170px]">
                           {items.map((r) => {
                             const isLab = r.kind === "lab";
                             const isTut = r.kind === "tutorial";
                             const bgCard = isLab
-                              ? "bg-violet-500/15 text-violet-200 border-violet-500/30 hover:border-violet-400/60"
+                              ? "bg-amber-50 text-amber-950 border-amber-300/80 hover:border-amber-500"
                               : isTut
-                              ? "bg-amber-500/15 text-amber-200 border-amber-500/30 hover:border-amber-400/60"
-                              : "bg-indigo-500/15 text-indigo-200 border-indigo-500/30 hover:border-indigo-400/60";
+                              ? "bg-emerald-50 text-emerald-950 border-emerald-300/80 hover:border-emerald-500"
+                              : "bg-[#7B1123]/10 text-stone-900 border-[#7B1123]/25 hover:border-[#7B1123]/60";
 
                             return (
                               <div
                                 key={r.session_id}
                                 onClick={() => setSelectedSession(r)}
-                                className={`mb-1.5 rounded-xl p-2.5 border transition-all cursor-pointer shadow-sm hover:scale-[1.01] ${bgCard}`}
+                                className={`mb-1.5 rounded-xl p-2.5 border transition-all cursor-pointer shadow-xs hover:scale-[1.01] ${bgCard}`}
                               >
                                 <div className="flex items-center justify-between gap-1 mb-1">
-                                  <strong className="font-bold tracking-tight text-white">
+                                  <strong className="font-bold tracking-tight text-stone-900">
                                     {r.course_id}
                                   </strong>
-                                  <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-900/70 border border-white/10 text-slate-200">
+                                  <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-white border border-[#D8C7B5] text-stone-800 font-semibold shadow-xs">
                                     {r.room_id}
                                   </span>
                                 </div>
 
-                                <div className="text-[11px] font-medium truncate opacity-90">
+                                <div className="text-[11px] font-medium truncate opacity-90 text-stone-800">
                                   {r.faculty}
                                 </div>
 
-                                <div className="text-[10px] opacity-75 mt-0.5 truncate flex items-center justify-between">
+                                <div className="text-[10px] text-stone-600 mt-0.5 truncate flex items-center justify-between">
                                   <span>{r.groups.join(", ")}</span>
                                   {r.duration > 1 && (
-                                    <span className="font-mono text-[9px] bg-white/10 px-1 rounded">
+                                    <span className="font-mono text-[9px] bg-stone-200/80 px-1 rounded font-bold text-stone-800">
                                       {r.duration}h
                                     </span>
                                   )}
@@ -240,9 +237,9 @@ export default function Timetable({ user }: { user: User }) {
         </div>
       ) : (
         /* List View */
-        <div className="glass-panel rounded-2xl border border-slate-800 overflow-x-auto shadow-xl">
+        <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] overflow-x-auto shadow-xs backdrop-blur-md">
           <table className="min-w-full text-xs">
-            <thead className="bg-slate-900/80 border-b border-slate-800 text-slate-400">
+            <thead className="bg-[#FAF5ED] border-b border-[#E8DEC8] text-stone-800 font-bold">
               <tr className="text-left">
                 <th className="p-3">Session ID</th>
                 <th className="p-3">Course</th>
@@ -254,27 +251,27 @@ export default function Timetable({ user }: { user: User }) {
                 <th className="p-3">Student Groups</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50">
+            <tbody className="divide-y divide-[#E8DEC8]">
               {rows.map((r) => (
                 <tr
                   key={r.session_id}
                   onClick={() => setSelectedSession(r)}
-                  className="hover:bg-slate-900/40 transition-colors cursor-pointer"
+                  className="hover:bg-[#FAF7F2] transition-colors cursor-pointer"
                 >
-                  <td className="p-3 font-mono font-bold text-indigo-300">{r.session_id}</td>
-                  <td className="p-3 font-semibold text-white">{r.course_id}</td>
+                  <td className="p-3 font-mono font-bold text-[#7B1123]">{r.session_id}</td>
+                  <td className="p-3 font-bold text-stone-900">{r.course_id}</td>
                   <td className="p-3">
-                    <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                    <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-[#FAF5ED] text-stone-800 border border-[#E8DEC8]">
                       {r.kind}
                     </span>
                   </td>
-                  <td className="p-3 font-mono">
+                  <td className="p-3 font-mono font-semibold text-stone-800">
                     {r.day} P{r.start_period}
                   </td>
-                  <td className="p-3 font-mono">{r.duration} hr</td>
-                  <td className="p-3 font-mono font-semibold text-slate-200">{r.room_id}</td>
-                  <td className="p-3 text-slate-300">{r.faculty}</td>
-                  <td className="p-3 text-slate-400">{r.groups.join(", ")}</td>
+                  <td className="p-3 font-mono text-stone-700">{r.duration} hr</td>
+                  <td className="p-3 font-mono font-bold text-stone-800">{r.room_id}</td>
+                  <td className="p-3 text-stone-800">{r.faculty}</td>
+                  <td className="p-3 text-stone-600">{r.groups.join(", ")}</td>
                 </tr>
               ))}
             </tbody>
@@ -282,57 +279,57 @@ export default function Timetable({ user }: { user: User }) {
         </div>
       )}
 
-      {/* Selected Session Drawer Modal */}
+      {/* Selected Session Modal */}
       {selectedSession && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-panel border border-slate-700 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E8DCBE] rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E8DEC8] pb-3">
               <div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#7B1123]/10 text-[#7B1123] border border-[#7B1123]/20">
                   {selectedSession.session_id}
                 </span>
-                <h3 className="text-lg font-bold text-white mt-1">
+                <h3 className="text-lg font-black text-stone-900 mt-1">
                   {selectedSession.course_id} · {selectedSession.title || "Course"}
                 </h3>
               </div>
               <button
                 onClick={() => setSelectedSession(null)}
-                className="text-slate-400 hover:text-white"
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-900 hover:bg-stone-200"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-2 text-xs text-slate-300">
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Assigned Faculty:</span>
-                <strong className="text-white">{selectedSession.faculty} ({selectedSession.faculty_id})</strong>
+            <div className="space-y-2 text-xs text-stone-700">
+              <div className="flex justify-between py-1 border-b border-[#E8DEC8]">
+                <span className="text-stone-500 font-medium">Assigned Faculty:</span>
+                <strong className="text-stone-900">{selectedSession.faculty} ({selectedSession.faculty_id})</strong>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Venue & Room Type:</span>
-                <strong className="text-white font-mono">{selectedSession.room_id}</strong>
+              <div className="flex justify-between py-1 border-b border-[#E8DEC8]">
+                <span className="text-stone-500 font-medium">Venue & Room:</span>
+                <strong className="text-stone-900 font-mono">{selectedSession.room_id}</strong>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Scheduled Slot:</span>
-                <strong className="text-indigo-300 font-mono">
-                  {selectedSession.day} Period {selectedSession.start_period} (Duration: {selectedSession.duration}h)
+              <div className="flex justify-between py-1 border-b border-[#E8DEC8]">
+                <span className="text-stone-500 font-medium">Scheduled Slot:</span>
+                <strong className="text-[#7B1123] font-mono">
+                  {selectedSession.day} Period {selectedSession.start_period} ({selectedSession.duration}h)
                 </strong>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Student Groups:</span>
-                <strong className="text-white">{selectedSession.groups.join(", ")}</strong>
+              <div className="flex justify-between py-1 border-b border-[#E8DEC8]">
+                <span className="text-stone-500 font-medium">Student Groups:</span>
+                <strong className="text-stone-900">{selectedSession.groups.join(", ")}</strong>
               </div>
               {selectedSession.basket && (
-                <div className="flex justify-between py-1 border-b border-slate-800/60">
-                  <span className="text-slate-400">Elective Basket:</span>
-                  <strong className="text-amber-300 font-mono">{selectedSession.basket}</strong>
+                <div className="flex justify-between py-1 border-b border-[#E8DEC8]">
+                  <span className="text-stone-500 font-medium">Elective Basket:</span>
+                  <strong className="text-amber-800 font-mono font-bold">{selectedSession.basket}</strong>
                 </div>
               )}
             </div>
 
             <button
               onClick={() => setSelectedSession(null)}
-              className="btn-secondary w-full text-xs"
+              className="btn-secondary w-full text-xs py-2"
             >
               Close
             </button>

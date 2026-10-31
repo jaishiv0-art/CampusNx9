@@ -99,37 +99,37 @@ export const DEMO_USERS = [
 ];
 
 export const statusColor: Record<string, string> = {
-  approved: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
-  pending: "bg-amber-500/15 text-amber-300 border border-amber-500/30",
-  rejected: "bg-rose-500/15 text-rose-300 border border-rose-500/30",
-  alternative_offered: "bg-sky-500/15 text-sky-300 border border-sky-500/30",
-  cancelled: "bg-slate-700/40 text-slate-400 border border-slate-700",
-  conflict: "bg-red-500/20 text-red-300 border border-red-500/40"
+  approved: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold",
+  pending: "bg-amber-50 text-amber-900 border border-amber-300 font-semibold",
+  rejected: "bg-rose-50 text-rose-800 border border-rose-300 font-semibold",
+  alternative_offered: "bg-sky-50 text-sky-800 border border-sky-300 font-semibold",
+  cancelled: "bg-stone-100 text-stone-600 border border-stone-300 font-medium",
+  conflict: "bg-red-50 text-red-900 border border-red-300 font-bold"
 };
 
 export const roleBadgeInfo: Record<RoleType, { label: string; bg: string; border: string; text: string }> = {
   ADMIN: {
     label: "Dean's Office (Admin)",
-    bg: "bg-amber-500/15",
-    border: "border-amber-500/30",
-    text: "text-amber-300"
+    bg: "bg-[#7B1123]/10",
+    border: "border-[#7B1123]/25",
+    text: "text-[#7B1123]"
   },
   DEPARTMENT_COORDINATOR: {
     label: "Department Coordinator",
-    bg: "bg-blue-500/15",
-    border: "border-blue-500/30",
-    text: "text-blue-300"
+    bg: "bg-blue-50",
+    border: "border-blue-300",
+    text: "text-blue-900"
   },
   FACULTY: {
     label: "Faculty Member",
-    bg: "bg-purple-500/15",
-    border: "border-purple-500/30",
-    text: "text-purple-300"
+    bg: "bg-stone-100",
+    border: "border-stone-300",
+    text: "text-stone-800"
   },
   CLUB_REPRESENTATIVE: {
     label: "Club Representative",
-    bg: "bg-emerald-500/15",
-    border: "border-emerald-500/30",
-    text: "text-emerald-300"
+    bg: "bg-emerald-50",
+    border: "border-emerald-300",
+    text: "text-emerald-900"
   }
 };
