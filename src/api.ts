@@ -1,7 +1,47 @@
-export const getApiBase = () => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  if (envUrl !== undefined && envUrl !== null && envUrl !== "") {
-    return envUrl;
+export const getApiBase = (): string => {
+  // 1. Browser runtime: dynamically determine based on current origin/host
+  if (typeof window !== "undefined" && window.location) {
+    const hostname = window.location.hostname;
+    const isLocalhost =
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "0.0.0.0" ||
+      hostname === "::1" ||
+      hostname.endsWith(".local");
+
+    const envUrl = (((import.meta as any).env?.VITE_API_URL as string) || "").trim();
+
+    // In production (e.g. *.vercel.app, custom production domain):
+    // NEVER allow localhost or 127.0.0.1 even if VITE_API_URL was set in Vercel env!
+    if (!isLocalhost) {
+      if (
+        envUrl &&
+        !envUrl.includes("localhost") &&
+        !envUrl.includes("127.0.0.1") &&
+        !envUrl.includes("0.0.0.0")
+      ) {
+        return envUrl.replace(/\/+$/, "");
+      }
+      return "/api";
+    }
+
+    // In local development:
+    // Vite dev server proxy automatically rewrites /api -> http://127.0.0.1:8000
+    if (envUrl) {
+      return envUrl.replace(/\/+$/, "");
+    }
+    return "/api";
+  }
+
+  // 2. SSR / Non-browser fallback
+  const envUrl = (((import.meta as any).env?.VITE_API_URL as string) || "").trim();
+  if (
+    envUrl &&
+    !envUrl.includes("localhost") &&
+    !envUrl.includes("127.0.0.1") &&
+    !envUrl.includes("0.0.0.0")
+  ) {
+    return envUrl.replace(/\/+$/, "");
   }
   return "/api";
 };
@@ -15,8 +55,14 @@ export const setToken = (t: string) => {
 };
 
 export async function api<T = any>(path: string, method = "GET", body?: unknown): Promise<T> {
-  const base = getApiBase();
-  const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+  const base = getApiBase().replace(/\/+$/, "");
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const url = (path.startsWith("http://") || path.startsWith("https://"))
+    ? path
+    : (base === "/api" && cleanPath.startsWith("/api/"))
+      ? cleanPath
+      : `${base}${cleanPath}`;
+
   const r = await fetch(url, {
     method,
     headers: {
@@ -34,16 +80,24 @@ export async function api<T = any>(path: string, method = "GET", body?: unknown)
 }
 
 export async function upload(path: string, file: File) {
-  const base = getApiBase();
-  const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+  const base = getApiBase().replace(/\/+$/, "");
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const url = (path.startsWith("http://") || path.startsWith("https://"))
+    ? path
+    : (base === "/api" && cleanPath.startsWith("/api/"))
+      ? cleanPath
+      : `${base}${cleanPath}`;
+
   const f = new FormData();
   f.append("file", file);
   const r = await fetch(url, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
     body: f
   });
-  const j = await r.json();
+  const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(JSON.stringify(j.detail ?? j));
   return j;
 }

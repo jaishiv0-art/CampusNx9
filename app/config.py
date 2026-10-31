@@ -1,5 +1,5 @@
 import os
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DB_PATH = os.environ.get("DB_PATH", os.path.join(ROOT, "cit.db"))
 DATASET_PATH = os.environ.get("DATASET_PATH", os.path.join(ROOT, "data", "cit_public.json"))
 EXPORT_DIR = os.environ.get("EXPORT_DIR", os.path.join(ROOT, "exports"))
