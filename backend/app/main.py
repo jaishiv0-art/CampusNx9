@@ -34,7 +34,17 @@ def get_data():
     if store.kv_get("priority_order"):
         d["priority_order"] = store.kv_get("priority_order")
     return d
-def get_assign(): return {k: tuple(v) for k, v in (store.kv_get("timetable") or {}).items()}
+def get_assign():
+    t = store.kv_get("timetable")
+    if not t:
+        try:
+            cand = config.resolve_path(None, os.path.join("data", "baseline_timetable.json"))
+            if os.path.exists(cand):
+                t = json.load(open(cand, encoding="utf-8"))
+                store.kv_set("timetable", t)
+        except Exception:
+            pass
+    return {k: tuple(v) for k, v in (t or {}).items()}
 def fest(): return store.kv_get("fest") or {"bookings": [], "session_overrides": []}
 def solver_mod():
     try:
@@ -101,6 +111,12 @@ def login(b: Login):
         target_user = target_user.split("@")[0]
 
     r = store.q("SELECT * FROM users WHERE (username=? OR username=?) AND active=1", (target_user, raw_user))
+    if not r:
+        try:
+            store.seed_users(get_data())
+            r = store.q("SELECT * FROM users WHERE (username=? OR username=?) AND active=1", (target_user, raw_user))
+        except Exception:
+            pass
     if not r:
         sb = store.get_supabase_client()
         if sb:

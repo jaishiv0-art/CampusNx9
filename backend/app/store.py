@@ -127,9 +127,7 @@ def x(sql, args=()):
         last_id = cur.lastrowid
         return last_id
 
-def seed_users(data):
-    if q("SELECT 1 FROM users LIMIT 1"):
-        return
+def seed_users(data=None):
     demo = [
         ("admin", "admin123", "ADMIN", None, None, "Administration"),
         ("coord_cse", "coord123", "DEPARTMENT_COORDINATOR", "CSE", None, "CSE Department"),
@@ -137,7 +135,14 @@ def seed_users(data):
         ("club_dramatics", "club123", "CLUB_REPRESENTATIVE", None, None, "Dramatics Society"),
         ("club_robotics", "club123", "CLUB_REPRESENTATIVE", None, None, "Robotics Club")
     ]
-    for f in data["faculty"]:
-        demo.append((f"fac_{f['id'].lower()}", "faculty123", "FACULTY", f["department"], f["id"], f["name"]))
-    for u in demo:
-        x("INSERT INTO users(username,pw,role,department,faculty_id,org) VALUES(?,?,?,?,?,?)", (u[0], hash_pw(u[1]), u[2], u[3], u[4], u[5]))
+    if data and isinstance(data, dict) and "faculty" in data:
+        for f in data["faculty"]:
+            demo.append((f"fac_{f['id'].lower()}", "faculty123", "FACULTY", f.get("department"), f.get("id"), f.get("name")))
+    with _lock:
+        for u in demo:
+            conn().execute(
+                "INSERT INTO users(username,pw,role,department,faculty_id,org,active) VALUES(?,?,?,?,?,?,1) "
+                "ON CONFLICT(username) DO NOTHING",
+                (u[0], hash_pw(u[1]), u[2], u[3], u[4], u[5])
+            )
+        conn().commit()

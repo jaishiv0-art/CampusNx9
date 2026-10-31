@@ -8,6 +8,8 @@ frontend/.env
 # Databases & local stores
 *.db
 *.sqlite3
+!cit.db
+!backend/cit.db
 
 # Python
 __pycache__/

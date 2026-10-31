@@ -1,15 +1,9 @@
 export const getApiBase = () => {
-  if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host && host !== "localhost" && host !== "127.0.0.1") {
-      return "/api";
-    }
-  }
   const envUrl = (import.meta as any).env?.VITE_API_URL;
-  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+  if (envUrl !== undefined && envUrl !== null && envUrl !== "") {
     return envUrl;
   }
-  return "http://localhost:8000";
+  return "/api";
 };
 
 let token = localStorage.getItem("token") ?? "";
