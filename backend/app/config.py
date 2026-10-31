@@ -26,9 +26,24 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", os.environ.get("NEXT_PUBLIC_SUPABA
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", os.environ.get("SUPABASE_KEY", os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY", "")))
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
-DB_PATH = resolve_path(os.environ.get("DB_PATH"), "cit.db")
+# Serverless (Vercel) /tmp filesystem handler
+if os.environ.get("VERCEL"):
+    import shutil
+    tmp_db = "/tmp/cit.db"
+    orig_db = resolve_path(os.environ.get("DB_PATH"), "cit.db")
+    if not os.path.exists(tmp_db) and os.path.exists(orig_db):
+        try:
+            shutil.copyfile(orig_db, tmp_db)
+        except Exception:
+            pass
+    DB_PATH = tmp_db
+    EXPORT_DIR = "/tmp/exports"
+    os.makedirs(EXPORT_DIR, exist_ok=True)
+else:
+    DB_PATH = resolve_path(os.environ.get("DB_PATH"), "cit.db")
+    EXPORT_DIR = resolve_path(os.environ.get("EXPORT_DIR"), "exports")
+
 DATASET_PATH = resolve_path(os.environ.get("DATASET_PATH"), os.path.join("data", "cit_public.json"))
-EXPORT_DIR = resolve_path(os.environ.get("EXPORT_DIR"), "exports")
 JWT_SECRET = os.environ.get("JWT_SECRET", "cit-campusnx9-secure-jwt-token-change-in-prod")
 TEAM_NAME = os.environ.get("TEAM_NAME", "CampusNx9 CIT")
 SOLVE_SECONDS = int(os.environ.get("SOLVE_SECONDS", "180"))

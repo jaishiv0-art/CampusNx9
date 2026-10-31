@@ -1,4 +1,15 @@
-const BASE = (import.meta as any).env?.VITE_API_URL ?? "http://localhost:8000";
+const getApiBase = () => {
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl !== undefined && envUrl !== null && envUrl !== "") {
+    return envUrl;
+  }
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    return "/api";
+  }
+  return "http://localhost:8000";
+};
+
+const BASE = getApiBase();
 let token = localStorage.getItem("token") ?? "";
 export const setToken = (t: string) => { token = t; t ? localStorage.setItem("token", t) : localStorage.removeItem("token"); };
 export async function api<T = any>(path: string, method = "GET", body?: unknown): Promise<T> {
