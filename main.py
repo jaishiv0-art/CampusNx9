@@ -435,3 +435,12 @@ def health():
     try: import ortools; solver = ortools.__version__
     except ImportError: solver = None
     return {"ok": True, "ortools": solver, "llm_configured": bool(config.ANTHROPIC_API_KEY)}
+
+@app.get("/")
+def root():
+    return {
+        "status": "online",
+        "service": "CampusNx9 CIT Backend API",
+        "health": "/health",
+        "docs": "/docs"
+    }
