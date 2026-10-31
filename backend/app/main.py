@@ -65,13 +65,55 @@ def startup():
 
 
 # ------------------------------------------------------------------ auth
+USER_ALIASES = {
+    "dean.office": "admin",
+    "admin@cit.ac.in": "admin",
+    "dean.office@cit.ac.in": "admin",
+    "coord.cse": "coord_cse",
+    "coord.cse@cit.ac.in": "coord_cse",
+    "coord.ece": "coord_ece",
+    "coord.ece@cit.ac.in": "coord_ece",
+    "coord.me": "coord_me",
+    "coord.me@cit.ac.in": "coord_me",
+    "ananya.mishra": "fac_f01",
+    "ananya.mishra@cit.ac.in": "fac_f01",
+    "rohit.sahoo": "fac_f02",
+    "rohit.sahoo@cit.ac.in": "fac_f02",
+    "dramatics.society": "club_dramatics",
+    "dramatics.society@cit.ac.in": "club_dramatics",
+    "robotics.club": "club_robotics",
+    "robotics.club@cit.ac.in": "club_robotics",
+}
+
 class Login(BaseModel): username: str; password: str
+
 @app.post("/auth/login")
 def login(b: Login):
-    r = store.q("SELECT * FROM users WHERE username=? AND active=1", (b.username,))
-    if not r or not store.check_pw(b.password, r[0]["pw"]): raise HTTPException(401, "Bad credentials")
-    store.audit(b.username, "login")
-    u = r[0]; return {"token": auth.make_token(u), "user": {k: u[k] for k in ("username", "role", "department", "faculty_id", "org")}}
+    raw_user = (b.username or "").strip().lower()
+    target_user = USER_ALIASES.get(raw_user, raw_user)
+    if "@" in target_user:
+        target_user = target_user.split("@")[0]
+
+    r = store.q("SELECT * FROM users WHERE (username=? OR username=?) AND active=1", (target_user, raw_user))
+    if not r:
+        sb = store.get_supabase_client()
+        if sb:
+            try:
+                res = sb.table("users").select("*").or_(f"username.eq.{target_user},username.eq.{raw_user}").eq("active", 1).execute()
+                if res.data:
+                    r = res.data
+                    u = r[0]
+                    store.x("INSERT INTO users(username,pw,role,department,faculty_id,org,active) VALUES(?,?,?,?,?,?,?) ON CONFLICT(username) DO UPDATE SET pw=excluded.pw, role=excluded.role",
+                            (u["username"], u["pw"], u["role"], u.get("department"), u.get("faculty_id"), u.get("org"), u.get("active", 1)))
+            except Exception:
+                pass
+
+    if not r or not store.check_pw(b.password, r[0]["pw"]):
+        raise HTTPException(401, "Bad credentials")
+
+    u = r[0]
+    store.audit(u["username"], "login")
+    return {"token": auth.make_token(u), "user": {k: u[k] for k in ("username", "role", "department", "faculty_id", "org")}}
 @app.get("/me")
 def me(u=Depends(current_user)): return {k: u[k] for k in ("username", "role", "department", "faculty_id", "org")} | {"permissions": sorted(auth.PERMS[u["role"]])}
 

@@ -129,9 +129,9 @@ export default function Login({ onSuccess }: LoginProps) {
         }).catch(() => {});
       }
 
-      const loginUser = username.includes("@") ? username.split("@")[0] : username;
+      const cleanUser = username.trim() || email.trim();
       const res = await api("/auth/login", "POST", {
-        username: loginUser,
+        username: cleanUser,
         password: password
       });
 
@@ -354,7 +354,9 @@ export default function Login({ onSuccess }: LoginProps) {
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
-                        setUsername(e.target.value.split("@")[0]);
+                        if (mode === "register" || !username) {
+                          setUsername(e.target.value.split("@")[0]);
+                        }
                       }}
                       placeholder="user@cit.ac.in"
                       className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
@@ -380,6 +382,44 @@ export default function Login({ onSuccess }: LoginProps) {
                     <UserIcon className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                   </div>
                 </div>
+
+                {/* Department / Org Fields (Contextual for Coordinator / Faculty / Club) */}
+                {mode === "register" && (selectedRole === "DEPARTMENT_COORDINATOR" || selectedRole === "FACULTY") && (
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      Academic Department
+                    </label>
+                    <select
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 text-xs sm:text-sm text-stone-900 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
+                    >
+                      <option value="CSE">Computer Science & Engineering (CSE)</option>
+                      <option value="ECE">Electronics & Communication (ECE)</option>
+                      <option value="ME">Mechanical Engineering (ME)</option>
+                      <option value="CE">Civil Engineering (CE)</option>
+                      <option value="EE">Electrical Engineering (EE)</option>
+                      <option value="MA">Mathematics (MA)</option>
+                      <option value="PH">Physics (PH)</option>
+                      <option value="HS">Humanities & Social Sciences (HS)</option>
+                    </select>
+                  </div>
+                )}
+
+                {mode === "register" && selectedRole === "CLUB_REPRESENTATIVE" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      Student Society / Club Name
+                    </label>
+                    <input
+                      type="text"
+                      value={clubName}
+                      onChange={(e) => setClubName(e.target.value)}
+                      placeholder="e.g. Dramatics Society, Robotics Club"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
+                    />
+                  </div>
+                )}
 
                 {/* Password */}
                 <div>

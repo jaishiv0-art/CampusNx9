@@ -15,6 +15,7 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": [
+    "src/**/*",
     "frontend/src/**/*"
   ],
   "exclude": [
