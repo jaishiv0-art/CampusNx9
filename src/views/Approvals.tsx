@@ -1,25 +1,307 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { api, statusColor, User } from "../api";
+import {
+  ShieldCheck,
+  Lock,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  ArrowRight,
+  Info,
+  Calendar,
+  Sparkles,
+  RefreshCw
+} from "lucide-react";
+
 export default function Approvals({ user }: { user: User }) {
-  const [pend, setPend] = useState<any[]>([]); const [props, setProps] = useState<any[]>([]); const [msg, setMsg] = useState("");
-  const load = () => { api("/bookings/pending").then(r => setPend(r.pending)).catch(() => setPend([])); api("/proposals").then(r => setProps(r.proposals)).catch(() => {}); };
-  useEffect(load, []);
-  const act = async (url: string, body?: any) => { try { setMsg(JSON.stringify(await api(url, "POST", body)).slice(0, 300)); } catch (e: any) { setMsg("Blocked: " + e.message); } load(); };
-  return (<div className="space-y-4">{msg && <p className="card text-sm break-words">{msg}</p>}
-    <div className="card space-y-2"><h2 className="font-semibold">Pending booking approvals</h2>
-      {pend.map(b => <div key={b.id} className="border rounded p-2 text-sm"><b>{b.id} · {b.request.title}</b> <span className="text-xs">({b.request.requester}, {b.request.attendance} people)</span>
-        <p className="text-xs">Engine recommendation: <span className={`px-1 rounded ${statusColor[b.recommended.status]}`}>{b.recommended.status}</span> {b.recommended.reason}</p>
-        <div className="flex gap-2 mt-1"><button className="btn" onClick={() => act(`/bookings/${b.id}/decide`, { action: "approve" })}>Approve</button>
-          <button className="btn-danger" onClick={() => act(`/bookings/${b.id}/decide`, { action: "reject", note: prompt("Reason?") ?? "" })}>Reject</button></div></div>)}
-      {!pend.length && <p className="text-sm text-slate-500">Nothing pending.</p>}</div>
-    <div className="card space-y-2"><h2 className="font-semibold">Timetable change proposals</h2>
-      {props.map(p => <div key={p.id} className="border rounded p-2 text-sm"><div className="flex justify-between"><b>#{p.id} {p.kind} by {p.created_by}</b><span className={`px-2 rounded text-xs ${statusColor[p.status] ?? "bg-red-100"}`}>{p.status}</span></div>
-        <p className="text-xs text-slate-600">{p.payload.changes.map((c: any) => c.type).join(", ")} → {p.result.status}{p.result.moved !== undefined && ` · ${p.result.moved} sessions moved`}</p>
-        {p.result.reasons && <ul className="text-xs text-rose-700 list-disc ml-4">{p.result.reasons.slice(0, 6).map((r: string, i: number) => <li key={i}>{r}</li>)}</ul>}
-        {p.result.diff?.length > 0 && <table className="text-xs w-full mt-1"><thead><tr className="text-left"><th>Session</th><th>Change</th><th>Old → New</th><th>Why</th></tr></thead><tbody>
-          {p.result.diff.map((d: any) => <tr key={d.session_id} className="border-t align-top"><td>{d.session_id}</td><td>{d.change}</td>
-            <td>{d.old ? `${d.old[0]} P${d.old[1]} ${d.old[2]}` : "—"} → {d.new ? `${d.new[0]} P${d.new[1]} ${d.new[2]}` : "—"}</td><td>{d.reason}</td></tr>)}</tbody></table>}
-        {p.status === "pending" && user.permissions.includes("*") && <div className="flex gap-2 mt-2"><button className="btn" onClick={() => act(`/proposals/${p.id}/approve`)}>Approve & apply</button>
-          <button className="btn-danger" onClick={() => act(`/proposals/${p.id}/reject`)}>Reject</button></div>}</div>)}
-      {!props.length && <p className="text-sm text-slate-500">No proposals.</p>}</div></div>);
+  const [pend, setPend] = useState<any[]>([]);
+  const [props, setProps] = useState<any[]>([]);
+  const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState<"bookings" | "proposals">("bookings");
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const bRes = await api("/bookings/pending").catch(() => ({ pending: [] }));
+      setPend(bRes.pending || []);
+      const pRes = await api("/proposals").catch(() => ({ proposals: [] }));
+      setProps(pRes.proposals || []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const act = async (url: string, body?: any) => {
+    setLoading(true);
+    try {
+      const res = await api(url, "POST", body);
+      setMsg(JSON.stringify(res).slice(0, 200));
+    } catch (e: any) {
+      setMsg("Action blocked: " + e.message);
+    } finally {
+      load();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Institutional Rule Notice Banner */}
+      <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-amber-500/30 bg-amber-950/20 text-amber-200">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-300">
+            <Lock className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-amber-300 flex items-center gap-2">
+              Institutional Governance Rule Enforced
+            </h3>
+            <p className="text-xs text-amber-200/90 mt-1 leading-relaxed">
+              <strong>"Nobody can approve their own request."</strong> Both the frontend UI and the backend security layer strictly prohibit any user—including Administrators and Department Coordinators—from authorizing requests they authored.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {msg && (
+        <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-200 text-xs flex items-center justify-between">
+          <span>{msg}</span>
+          <button onClick={() => setMsg("")} className="text-indigo-400 hover:text-white">✕</button>
+        </div>
+      )}
+
+      {/* Subtabs & Refresh Bar */}
+      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveSubTab("bookings")}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeSubTab === "bookings"
+                ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/40"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Pending Venue Bookings ({pend.length})
+          </button>
+          <button
+            onClick={() => setActiveSubTab("proposals")}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeSubTab === "proposals"
+                ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/40"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Timetable Change Proposals ({props.length})
+          </button>
+        </div>
+
+        <button
+          onClick={load}
+          disabled={loading}
+          className="btn-ghost text-xs"
+          title="Refresh queue"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </button>
+      </div>
+
+      {/* 1. Pending Bookings Queue */}
+      {activeSubTab === "bookings" && (
+        <div className="space-y-3">
+          {pend.map((b) => {
+            const isOwn = b.owner === user.username;
+            return (
+              <div
+                key={b.id}
+                className="glass-card rounded-2xl p-4 sm:p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4"
+              >
+                <div className="space-y-1.5 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-bold">
+                      {b.id}
+                    </span>
+                    <h3 className="font-semibold text-white text-sm sm:text-base">
+                      {b.request.title}
+                    </h3>
+                    <span className="text-xs text-slate-400">
+                      by <strong>{b.request.requester}</strong> ({b.request.attendance} attendees)
+                    </span>
+                  </div>
+
+                  <div className="text-xs text-slate-400 flex flex-wrap items-center gap-2">
+                    <span>Engine Verdict:</span>
+                    <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${statusColor[b.recommended.status]}`}>
+                      {b.recommended.status}
+                    </span>
+                    <span className="text-slate-300">{b.recommended.reason}</span>
+                  </div>
+
+                  {b.recommended.room_id && (
+                    <div className="text-xs text-indigo-300 flex items-center gap-2">
+                      <span>Assigned Venue:</span>
+                      <strong className="font-mono bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/30">
+                        {b.recommended.room_id} ({b.recommended.day} P{b.recommended.start_period}–P{b.recommended.end_period})
+                      </strong>
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions Guarded by Institutional Rule */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {isOwn ? (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Self-Approval Prohibited</span>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => act(`/bookings/${b.id}/decide`, { action: "approve" })}
+                        className="btn-primary text-xs py-1.5 px-3"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => {
+                          const note = prompt("Enter rejection reason:") ?? "";
+                          act(`/bookings/${b.id}/decide`, { action: "reject", note });
+                        }}
+                        className="btn-danger text-xs py-1.5 px-3"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {!pend.length && (
+            <div className="card text-center py-12 text-slate-400 text-sm">
+              <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2 opacity-80" />
+              All booking requests are processed. No pending requests awaiting your authorization.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 2. Timetable Change Proposals Queue */}
+      {activeSubTab === "proposals" && (
+        <div className="space-y-4">
+          {props.map((p) => {
+            const isOwn = p.created_by === user.username && p.kind !== "disruption";
+            const canApprove = user.permissions.includes("*") || user.permissions.includes("timetable.approve");
+            return (
+              <div
+                key={p.id}
+                className="glass-card rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-3"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold border border-slate-700">
+                      Proposal #{p.id}
+                    </span>
+                    <span className="text-sm font-semibold text-white">
+                      {p.kind}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      submitted by <strong className="text-slate-300">{p.created_by}</strong>
+                    </span>
+                  </div>
+
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${statusColor[p.status] ?? "bg-slate-800 text-slate-300"}`}>
+                    {p.status}
+                  </span>
+                </div>
+
+                <div className="text-xs text-slate-300 space-y-1">
+                  <p>
+                    <span className="text-slate-400">Changes:</span>{" "}
+                    {p.payload.changes.map((c: any) => c.type).join(", ")} →{" "}
+                    <strong className="text-indigo-400">{p.result.status}</strong>
+                    {p.result.moved !== undefined && ` · ${p.result.moved} sessions moved`}
+                  </p>
+
+                  {p.result.diff?.length > 0 && (
+                    <div className="overflow-x-auto mt-2 rounded-xl border border-slate-800">
+                      <table className="min-w-full text-xs">
+                        <thead className="bg-slate-800/50 text-slate-400">
+                          <tr className="text-left">
+                            <th className="p-2">Session</th>
+                            <th className="p-2">Action</th>
+                            <th className="p-2">Relocation (Old → New)</th>
+                            <th className="p-2">Reason</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/50">
+                          {p.result.diff.map((d: any) => (
+                            <tr key={d.session_id} className="text-slate-300">
+                              <td className="p-2 font-mono font-medium">{d.session_id}</td>
+                              <td className="p-2">{d.change}</td>
+                              <td className="p-2 text-indigo-300">
+                                {d.old ? `${d.old[0]} P${d.old[1]} ${d.old[2]}` : "—"} →{" "}
+                                {d.new ? `${d.new[0]} P${d.new[1]} ${d.new[2]}` : "—"}
+                              </td>
+                              <td className="p-2 text-slate-400">{d.reason}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                {p.status === "pending" && (
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    {isOwn ? (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Self-Approval Prohibited (Institutional Rule)</span>
+                      </div>
+                    ) : canApprove ? (
+                      <>
+                        <button
+                          onClick={() => act(`/proposals/${p.id}/approve`)}
+                          className="btn-primary text-xs py-1.5 px-3"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Approve & Apply Timetable
+                        </button>
+                        <button
+                          onClick={() => act(`/proposals/${p.id}/reject`)}
+                          className="btn-danger text-xs py-1.5 px-3"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          Reject
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-slate-500">Awaiting Dean's Office / Admin Approval</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {!props.length && (
+            <div className="card text-center py-12 text-slate-400 text-sm">
+              <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2 opacity-80" />
+              No disruption or reschedule change proposals currently pending.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
