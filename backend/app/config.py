@@ -2,24 +2,34 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+APP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+ROOT = os.path.abspath(os.path.join(APP_DIR, ".."))
 
 # Load environment variables from both root .env and backend/.env
 load_dotenv(os.path.join(ROOT, ".env"))
-load_dotenv(os.path.join(ROOT, "backend", ".env"))
+load_dotenv(os.path.join(APP_DIR, ".env"))
 
 def resolve_path(env_val, fallback_rel):
-    if env_val and not os.path.isabs(env_val):
-        cand = os.path.abspath(os.path.join(ROOT, env_val))
-        if os.path.exists(cand):
-            return cand
-    cand2 = os.path.abspath(os.path.join(ROOT, fallback_rel))
-    if os.path.exists(cand2):
-        return cand2
-    alt = os.path.abspath(os.path.join(ROOT, os.path.basename(fallback_rel)))
-    if os.path.exists(alt):
-        return alt
-    return cand2
+    candidates = []
+    if env_val:
+        if os.path.isabs(env_val) and os.path.exists(env_val):
+            return env_val
+        candidates.extend([
+            os.path.abspath(os.path.join(APP_DIR, env_val)),
+            os.path.abspath(os.path.join(ROOT, env_val))
+        ])
+    candidates.extend([
+        os.path.abspath(os.path.join(APP_DIR, fallback_rel)),
+        os.path.abspath(os.path.join(ROOT, fallback_rel)),
+        os.path.abspath(os.path.join(APP_DIR, os.path.basename(fallback_rel))),
+        os.path.abspath(os.path.join(ROOT, os.path.basename(fallback_rel))),
+        os.path.abspath(os.path.join(APP_DIR, "data", os.path.basename(fallback_rel))),
+        os.path.abspath(os.path.join(ROOT, "data", os.path.basename(fallback_rel))),
+    ])
+    for c in candidates:
+        if os.path.exists(c):
+            return c
+    return candidates[0]
 
 # Database & Supabase configuration
 SUPABASE_URL = os.environ.get("SUPABASE_URL", os.environ.get("NEXT_PUBLIC_SUPABASE_URL", ""))

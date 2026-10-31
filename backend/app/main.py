@@ -19,8 +19,14 @@ DAYS = ["MON", "TUE", "WED", "THU", "FRI"]
 def get_data():
     d = store.kv_get("dataset")
     if d is None:
-        d = json.load(open(config.DATASET_PATH, encoding="utf-8")); store.kv_set("dataset", d)
-    if store.kv_get("priority_order"): d["priority_order"] = store.kv_get("priority_order")
+        try:
+            d = json.load(open(config.DATASET_PATH, encoding="utf-8"))
+            store.kv_set("dataset", d)
+        except Exception as e:
+            print(f"[Dataset] Loading note: {e}")
+            d = {"rooms": [], "faculty": [], "student_groups": [], "courses": [], "sessions": []}
+    if store.kv_get("priority_order"):
+        d["priority_order"] = store.kv_get("priority_order")
     return d
 def get_assign(): return {k: tuple(v) for k, v in (store.kv_get("timetable") or {}).items()}
 def fest(): return store.kv_get("fest") or {"bookings": [], "session_overrides": []}
@@ -52,7 +58,10 @@ def recommend(req):
 
 @app.on_event("startup")
 def startup():
-    store.seed_users(get_data())
+    try:
+        store.seed_users(get_data())
+    except Exception as e:
+        print(f"[Startup Warning] User seeding deferred: {e}")
 
 
 # ------------------------------------------------------------------ auth
@@ -443,4 +452,13 @@ def health():
         "llm_configured": bool(config.ANTHROPIC_API_KEY),
         "supabase_configured": bool(config.SUPABASE_URL and config.SUPABASE_KEY),
         "supabase_connected": store.is_supabase_connected()
+    }
+
+@app.get("/")
+def root():
+    return {
+        "status": "online",
+        "service": "CampusNx9 CIT Backend API",
+        "health": "/health",
+        "docs": "/docs"
     }
