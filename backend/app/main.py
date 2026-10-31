@@ -11,7 +11,13 @@ from .core.diagnose import diagnose
 from .core.week import Week
 
 app = FastAPI(title="CIT Scheduler API", version="1.0")
-app.add_middleware(CORSMiddleware, allow_origins=config.CORS_ORIGINS, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r".*",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 DAYS = ["MON", "TUE", "WED", "THU", "FRI"]
 
 
