@@ -122,9 +122,9 @@ export default function Login({ onSuccess }: LoginProps) {
         }).catch(() => {});
       }
 
-      const loginUser = username.includes("@") ? username.split("@")[0] : username;
+      const cleanUser = username.trim() || email.trim();
       const res = await api("/auth/login", "POST", {
-        username: loginUser,
+        username: cleanUser,
         password: password
       });
 
@@ -338,7 +338,9 @@ export default function Login({ onSuccess }: LoginProps) {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      setUsername(e.target.value.split("@")[0]);
+                      if (mode === "register" || !username) {
+                        setUsername(e.target.value.split("@")[0]);
+                      }
                     }}
                     placeholder="user@cit.ac.in"
                     className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
