@@ -1,0 +1,12 @@
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DB_PATH = os.environ.get("DB_PATH", os.path.join(ROOT, "cit.db"))
+DATASET_PATH = os.environ.get("DATASET_PATH", os.path.join(ROOT, "data", "cit_public.json"))
+EXPORT_DIR = os.environ.get("EXPORT_DIR", os.path.join(ROOT, "exports"))
+JWT_SECRET = os.environ.get("JWT_SECRET", "dev-only-change-me")
+TEAM_NAME = os.environ.get("TEAM_NAME", "CIT Scheduler")
+SOLVE_SECONDS = int(os.environ.get("SOLVE_SECONDS", "180"))
+SOLVER_WORKERS = int(os.environ.get("SOLVER_WORKERS", "8"))
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+LLM_MODEL = os.environ.get("LLM_MODEL", "claude-sonnet-4-6")
+CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
