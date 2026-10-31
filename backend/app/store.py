@@ -42,6 +42,38 @@ def conn():
         CREATE TABLE IF NOT EXISTS proposals(id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT, created_by TEXT, status TEXT, payload TEXT, result TEXT, decided_by TEXT, created TEXT);
         CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, actor TEXT, action TEXT, detail TEXT);
         """)
+
+        # Ensure default institutional accounts are always seeded
+        try:
+            cur = _conn.execute("SELECT 1 FROM users LIMIT 1")
+            if not cur.fetchone():
+                demo = [
+                    ("admin", "admin123", "ADMIN", None, None, "Administration"),
+                    ("dean.office", "admin123", "ADMIN", None, None, "Dean's Office"),
+                    ("coord_cse", "coord123", "DEPARTMENT_COORDINATOR", "CSE", None, "CSE Department"),
+                    ("coord_ece", "coord123", "DEPARTMENT_COORDINATOR", "ECE", None, "ECE Department"),
+                    ("coord_me", "coord123", "DEPARTMENT_COORDINATOR", "ME", None, "ME Department"),
+                    ("coord_ce", "coord123", "DEPARTMENT_COORDINATOR", "CE", None, "CE Department"),
+                    ("coord_ee", "coord123", "DEPARTMENT_COORDINATOR", "EE", None, "EE Department"),
+                    ("club_dramatics", "club123", "CLUB_REPRESENTATIVE", None, None, "Dramatics Society"),
+                    ("club_robotics", "club123", "CLUB_REPRESENTATIVE", None, None, "Robotics Club"),
+                    ("club_music", "club123", "CLUB_REPRESENTATIVE", None, None, "Music Club"),
+                ]
+                try:
+                    ds_path = config.resolve_path(getattr(config, "DATASET_PATH", None), "cit_public.json")
+                    if os.path.exists(ds_path):
+                        with open(ds_path, encoding="utf-8") as f:
+                            d = json.load(f)
+                            for fac in d.get("faculty", []):
+                                demo.append((f"fac_{fac['id'].lower()}", "faculty123", "FACULTY", fac.get("department"), fac.get("id"), fac.get("name")))
+                except Exception:
+                    pass
+                for u in demo:
+                    _conn.execute("INSERT OR IGNORE INTO users(username,pw,role,department,faculty_id,org,active) VALUES(?,?,?,?,?,?,1)",
+                                  (u[0], hash_pw(u[1]), u[2], u[3], u[4], u[5]))
+                _conn.commit()
+        except Exception as e:
+            print(f"[Store Auto-Seed Note] {e}")
     return _conn
 
 def now():
