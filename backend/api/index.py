@@ -11,3 +11,4 @@ from app.main import app as backend_app
 app = FastAPI(title="CampusNx9 CIT Backend")
 app.mount("/api", backend_app)
 app.mount("", backend_app)
+
