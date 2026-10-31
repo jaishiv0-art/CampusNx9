@@ -21,7 +21,9 @@ import {
   Award,
   Target,
   FileCheck,
-  Check
+  Check,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 interface LoginProps {
@@ -45,6 +47,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const roles = [
     {
@@ -130,9 +133,10 @@ export default function Login({ onSuccess }: LoginProps) {
       }
 
       const cleanUser = username.trim() || email.trim();
+      const cleanPass = password.trim();
       const res = await api("/auth/login", "POST", {
         username: cleanUser,
-        password: password
+        password: cleanPass
       });
 
       setToken(res.token);
@@ -160,8 +164,8 @@ export default function Login({ onSuccess }: LoginProps) {
     setErr("");
     try {
       const res = await api("/auth/login", "POST", {
-        username: u,
-        password: p
+        username: u.trim(),
+        password: p.trim()
       });
       setToken(res.token);
       const me = await api<User>("/me");
@@ -423,19 +427,33 @@ export default function Login({ onSuccess }: LoginProps) {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Password
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-stone-700">
+                      Password
+                    </label>
+                    <span className="text-[11px] text-[#7B1123] font-medium font-mono bg-[#FAF5ED] px-2 py-0.5 rounded border border-[#EADBCA]">
+                      Default: {currentRoleInfo.demoPass}
+                    </span>
+                  </div>
                   <div className="relative">
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       required
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 pr-10 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
                     />
                     <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-2.5 text-stone-400 hover:text-stone-700 p-0.5 rounded transition-colors"
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
