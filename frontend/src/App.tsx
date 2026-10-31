@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api, setToken, User } from "./api";
+import { supabase } from "./supabase";
 import Navbar from "./components/Navbar";
 import Login from "./views/Login";
 import RoleDashboardOverview from "./views/RoleDashboardOverview";
@@ -30,6 +31,7 @@ export default function App() {
   }, []);
 
   const handleLogout = () => {
+    supabase.auth.signOut().catch(() => {});
     setToken("");
     setUser(null);
   };

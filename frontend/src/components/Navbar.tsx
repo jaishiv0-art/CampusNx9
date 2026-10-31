@@ -7,6 +7,7 @@ import {
   GraduationCap,
   Settings,
   LogOut,
+  Building2,
   Users,
   Compass,
   CheckCircle2,
@@ -40,7 +41,7 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
     { id: "assistant", label: "AI Scheduler NLP", icon: Sparkles }
   ].filter(Boolean) as { id: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
 
-  const switchRole = async (demo: (typeof DEMO_USERS)[0]) => {
+  const switchRole = async (demo: typeof DEMO_USERS[0]) => {
     setSwitching(true);
     try {
       const res = await api("/auth/login", "POST", {
@@ -60,19 +61,26 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
 
   const badge = roleBadgeInfo[user.role as RoleType] || {
     label: user.role,
-    bg: "bg-[#7B1123]/10",
-    border: "border-[#7B1123]/25",
-    text: "text-[#7B1123]"
+    bg: "bg-slate-700/50",
+    border: "border-slate-600",
+    text: "text-slate-300"
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FAF5ED]/95 backdrop-blur-xl border-b border-[#E8DEC8] shadow-xs">
+    <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl">
+      {/* =========================================================================
+          NAVBAR HEADER (Change background opacity, borders, or layout here)
+          ========================================================================= */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* Logo & Institute Branding */}
+          {/* =====================================================================
+              1. LOGO ICON & BRANDING
+              - Change 'Building2' or replace the <div> with an <img> tag for custom logo
+              - Change gradient 'from-indigo-500 ... to-violet-700' for different brand colors
+              ===================================================================== */}
           <div className="flex items-center gap-3">
-            <div className="h-10 px-2 rounded-xl bg-white flex items-center justify-center shadow-xs border border-[#E8DEC8]">
+            <div className="h-10 px-2 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-indigo-500/10 border border-slate-700">
               <img
                 src="/logo.png"
                 alt="CampusNx9"
@@ -80,23 +88,26 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
               />
             </div>
 
+            {/* ===================================================================
+                2. BRAND NAME & INSTITUTE TITLE
+                =================================================================== */}
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-black tracking-tight text-stone-900 text-base sm:text-lg">
-                  Campus<span className="text-[#7B1123]">Nx9</span>
+                <span className="font-extrabold tracking-tight text-white text-base sm:text-lg">
+                  Campus<span className="text-indigo-400">Nx9</span>
                 </span>
-                <span className="px-1.5 py-0.5 text-[10px] uppercase font-mono font-bold tracking-wider bg-[#7B1123]/10 text-[#7B1123] rounded border border-[#7B1123]/20">
+                <span className="px-1.5 py-0.5 text-[10px] uppercase font-mono font-bold tracking-wider bg-indigo-500/10 text-indigo-300 rounded border border-indigo-500/30">
                   CIT
                 </span>
               </div>
-              <p className="text-[11px] text-stone-500 hidden sm:block">
+              <p className="text-[11px] text-slate-400 hidden sm:block">
                 Chilika Institute of Technology · Timetable & Venue Operating System
               </p>
             </div>
           </div>
 
-          {/* Navigation Tabs with Grey Hover */}
-          <nav className="hidden md:flex items-center gap-1.5">
+          {/* Navigation Tabs */}
+          <nav className="hidden md:flex items-center gap-1">
             {tabs.map((t) => {
               const Icon = t.icon;
               const active = tab === t.id;
@@ -104,25 +115,26 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
                     active
-                      ? "bg-[#7B1123] text-white shadow-sm"
-                      : "text-stone-700 hover:text-stone-950 hover:bg-stone-200/90 border border-transparent"
+                      ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 shadow-sm shadow-indigo-500/20"
+                      : "text-slate-300 hover:text-white hover:bg-slate-800/50"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${active ? "text-white" : "text-stone-500"}`} />
+                  <Icon className={`w-4 h-4 ${active ? "text-indigo-400" : "text-slate-400"}`} />
                   {t.label}
                 </button>
               );
             })}
           </nav>
 
-          {/* User Profile & Role Switcher */}
+          {/* User Profile & Quick Role Switcher */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Quick Role Switcher Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${badge.bg} ${badge.border} ${badge.text} hover:bg-stone-200/90 hover:text-stone-900`}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${badge.bg} ${badge.border} ${badge.text} hover:brightness-110`}
                 title="Quickly switch between official roles"
               >
                 <Users className="w-3.5 h-3.5" />
@@ -132,10 +144,10 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-72 rounded-2xl shadow-xl p-2 z-50 bg-white border border-[#E8DEC8] animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="px-3 py-2 border-b border-[#E8DEC8]">
-                    <p className="text-xs font-bold text-stone-900">Switch Active Role</p>
-                    <p className="text-[11px] text-stone-500">Test the 4 institutional user portals</p>
+                <div className="absolute right-0 mt-2 w-72 glass-dropdown rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 border border-slate-700/80">
+                  <div className="px-3 py-2 border-b border-slate-800">
+                    <p className="text-xs font-semibold text-slate-200">Switch Active Role</p>
+                    <p className="text-[11px] text-slate-400">Instantly test the 4 competition user roles</p>
                   </div>
                   <div className="py-1 space-y-1">
                     {DEMO_USERS.map((demo) => {
@@ -147,15 +159,15 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
                           onClick={() => switchRole(demo)}
                           className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-all ${
                             isCurrent
-                              ? "bg-[#7B1123]/10 text-[#7B1123] font-bold border border-[#7B1123]/30"
-                              : "text-stone-700 hover:bg-stone-200/90 hover:text-stone-950"
+                              ? "bg-indigo-600/20 text-indigo-300 font-semibold border border-indigo-500/30"
+                              : "text-slate-300 hover:bg-slate-800 hover:text-white"
                           }`}
                         >
                           <div>
-                            <div className="font-semibold text-stone-900">{demo.label}</div>
-                            <div className="text-[10px] text-stone-500">{demo.badge}</div>
+                            <div className="font-medium text-slate-100">{demo.label}</div>
+                            <div className="text-[10px] text-slate-400">{demo.badge}</div>
                           </div>
-                          {isCurrent && <CheckCircle2 className="w-4 h-4 text-[#7B1123]" />}
+                          {isCurrent && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
                         </button>
                       );
                     })}
@@ -164,10 +176,10 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
               )}
             </div>
 
-            {/* Sign Out Button with Grey Hover */}
+            {/* Sign Out Button */}
             <button
               onClick={onLogout}
-              className="p-2 rounded-xl text-stone-500 hover:text-rose-700 hover:bg-stone-200/90 transition-colors border border-transparent hover:border-stone-300"
+              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20"
               title="Sign Out"
               aria-label="Sign Out"
             >
@@ -177,7 +189,7 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
         </div>
 
         {/* Mobile Navigation Tabs */}
-        <div className="md:hidden flex items-center gap-1.5 overflow-x-auto py-2 border-t border-[#E8DEC8]">
+        <div className="md:hidden flex items-center gap-1 overflow-x-auto py-2 border-t border-slate-800/80">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -185,10 +197,10 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                   active
-                    ? "bg-[#7B1123] text-white shadow-xs"
-                    : "text-stone-700 hover:text-stone-950 hover:bg-stone-200/90"
+                    ? "bg-indigo-600/25 text-indigo-300 border border-indigo-500/40"
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
