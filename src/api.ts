@@ -1,15 +1,17 @@
-const getApiBase = () => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  if (envUrl !== undefined && envUrl !== null && envUrl !== "") {
-    return envUrl;
+export const getApiBase = () => {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return "/api";
+    }
   }
-  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-    return "/api";
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+    return envUrl;
   }
   return "http://localhost:8000";
 };
 
-const BASE = getApiBase();
 let token = localStorage.getItem("token") ?? "";
 
 export const setToken = (t: string) => {
@@ -19,7 +21,9 @@ export const setToken = (t: string) => {
 };
 
 export async function api<T = any>(path: string, method = "GET", body?: unknown): Promise<T> {
-  const r = await fetch(BASE + path, {
+  const base = getApiBase();
+  const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+  const r = await fetch(url, {
     method,
     headers: {
       "Content-Type": "application/json",
@@ -36,9 +40,11 @@ export async function api<T = any>(path: string, method = "GET", body?: unknown)
 }
 
 export async function upload(path: string, file: File) {
+  const base = getApiBase();
+  const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
   const f = new FormData();
   f.append("file", file);
-  const r = await fetch(BASE + path, {
+  const r = await fetch(url, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: f

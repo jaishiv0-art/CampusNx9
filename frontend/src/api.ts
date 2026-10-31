@@ -1,15 +1,17 @@
-const getApiBase = () => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  if (envUrl !== undefined && envUrl !== null && envUrl !== "") {
-    return envUrl;
+export const getApiBase = () => {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return "/api";
+    }
   }
-  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-    return "/api";
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+    return envUrl;
   }
   return "http://localhost:8000";
 };
 
-const BASE = getApiBase();
 let token = localStorage.getItem("token") ?? "";
 
 export const setToken = (t: string) => {
@@ -19,7 +21,9 @@ export const setToken = (t: string) => {
 };
 
 export async function api<T = any>(path: string, method = "GET", body?: unknown): Promise<T> {
-  const r = await fetch(BASE + path, {
+  const base = getApiBase();
+  const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+  const r = await fetch(url, {
     method,
     headers: {
       "Content-Type": "application/json",
@@ -36,9 +40,11 @@ export async function api<T = any>(path: string, method = "GET", body?: unknown)
 }
 
 export async function upload(path: string, file: File) {
+  const base = getApiBase();
+  const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
   const f = new FormData();
   f.append("file", file);
-  const r = await fetch(BASE + path, {
+  const r = await fetch(url, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: f
@@ -99,37 +105,37 @@ export const DEMO_USERS = [
 ];
 
 export const statusColor: Record<string, string> = {
-  approved: "bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold",
-  pending: "bg-amber-50 text-amber-900 border border-amber-300 font-semibold",
-  rejected: "bg-rose-50 text-rose-800 border border-rose-300 font-semibold",
-  alternative_offered: "bg-sky-50 text-sky-800 border border-sky-300 font-semibold",
-  cancelled: "bg-stone-100 text-stone-600 border border-stone-300 font-medium",
-  conflict: "bg-red-50 text-red-900 border border-red-300 font-bold"
+  approved: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+  pending: "bg-amber-500/15 text-amber-300 border border-amber-500/30",
+  rejected: "bg-rose-500/15 text-rose-300 border border-rose-500/30",
+  alternative_offered: "bg-sky-500/15 text-sky-300 border border-sky-500/30",
+  cancelled: "bg-slate-700/40 text-slate-400 border border-slate-700",
+  conflict: "bg-red-500/20 text-red-300 border border-red-500/40"
 };
 
 export const roleBadgeInfo: Record<RoleType, { label: string; bg: string; border: string; text: string }> = {
   ADMIN: {
     label: "Dean's Office (Admin)",
-    bg: "bg-[#7B1123]/10",
-    border: "border-[#7B1123]/25",
-    text: "text-[#7B1123]"
+    bg: "bg-amber-500/15",
+    border: "border-amber-500/30",
+    text: "text-amber-300"
   },
   DEPARTMENT_COORDINATOR: {
     label: "Department Coordinator",
-    bg: "bg-blue-50",
-    border: "border-blue-300",
-    text: "text-blue-900"
+    bg: "bg-blue-500/15",
+    border: "border-blue-500/30",
+    text: "text-blue-300"
   },
   FACULTY: {
     label: "Faculty Member",
-    bg: "bg-stone-100",
-    border: "border-stone-300",
-    text: "text-stone-800"
+    bg: "bg-purple-500/15",
+    border: "border-purple-500/30",
+    text: "text-purple-300"
   },
   CLUB_REPRESENTATIVE: {
     label: "Club Representative",
-    bg: "bg-emerald-50",
-    border: "border-emerald-300",
-    text: "text-emerald-900"
+    bg: "bg-emerald-500/15",
+    border: "border-emerald-500/30",
+    text: "text-emerald-300"
   }
 };
