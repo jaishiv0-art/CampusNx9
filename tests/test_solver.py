@@ -1,5 +1,5 @@
 """Requires OR-Tools. Runs the REAL solver and the OFFICIAL validator."""
-import json, pytest
+import json, os, pytest
 ortools = pytest.importorskip("ortools")
 from app.core import solver, exams, checker, bookings as bk, disruption, export
 
@@ -26,7 +26,10 @@ def test_full_schedule_with_bookings(data, solved):
     assert rep["hard_violation_count"] == 0 and rep["bookings"]["priority_inversions"] == []
 
 def test_sample_disruption_minimal_moves(data, solved):
-    dis = json.load(open("../examples/sample_disruption.json"))
+    dis_path = os.path.join(os.path.dirname(__file__), "..", "examples", "sample_disruption.json")
+    if not os.path.exists(dis_path):
+        dis_path = os.path.join(os.path.dirname(__file__), "examples", "sample_disruption.json")
+    dis = json.load(open(dis_path, encoding="utf-8"))
     p = disruption.propose(data, solved["assign"], dis["changes"], solver.solve_timetable, 240)
     assert p["status"] == "PROPOSED"
     after = export.build_schedule("t", p["newdata"], p["new_assign"])
