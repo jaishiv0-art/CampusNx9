@@ -3,12 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl =
   (import.meta as any).env?.VITE_SUPABASE_URL ||
   (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://placeholder.supabase.co";
+  "https://biczznsddenrsggqgzut.supabase.co";
 
 const supabaseAnonKey =
   (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ||
   (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "placeholder-anon-key";
+  "sb_publishable_za2v9KNJIBS7b0-Q-Ta33A_pULcpGZU";
 
 // Safe initialized client for frontend authentication, subscriptions and queries
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
