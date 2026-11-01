@@ -52,16 +52,16 @@ export default function Approvals({ user }: { user: User }) {
   return (
     <div className="space-y-6">
       {/* Institutional Rule Notice Banner */}
-      <div className="bg-amber-50/95 rounded-2xl p-4 sm:p-5 border border-amber-300/90 shadow-xs">
+      <div className="bg-amber-100/95 rounded-2xl p-4 sm:p-5 border-2 border-amber-400/90 shadow-xs">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-800">
+          <div className="w-8 h-8 rounded-xl bg-amber-200 border-2 border-amber-500 flex items-center justify-center shrink-0 text-amber-950">
             <Lock className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-amber-950 flex items-center gap-2">
+            <h3 className="font-black text-sm text-amber-950 flex items-center gap-2">
               Institutional Governance Rule Enforced
             </h3>
-            <p className="text-xs text-amber-900 mt-1 leading-relaxed font-medium">
+            <p className="text-xs text-amber-950 mt-1 leading-relaxed font-bold">
               <strong className="text-amber-950 font-bold">"Nobody can approve their own request."</strong> Both the frontend UI and the backend security layer strictly prohibit any user—including Administrators and Department Coordinators—from authorizing requests they authored.
             </p>
           </div>
@@ -82,8 +82,8 @@ export default function Approvals({ user }: { user: User }) {
             onClick={() => setActiveSubTab("bookings")}
             className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               activeSubTab === "bookings"
-                ? "bg-[#7B1123] text-white shadow-sm shadow-[#7B1123]/25"
-                : "bg-white text-stone-700 border border-[#D8C7B5] hover:bg-stone-200 hover:text-stone-950 hover:border-stone-400"
+                ? "bg-[#7B1123] text-white shadow-md shadow-[#7B1123]/30 font-black"
+                : "bg-white text-stone-950 border-2 border-stone-300 hover:bg-stone-200 hover:text-black hover:border-stone-500 font-black"
             }`}
           >
             Pending Venue Bookings ({pend.length})
@@ -92,8 +92,8 @@ export default function Approvals({ user }: { user: User }) {
             onClick={() => setActiveSubTab("proposals")}
             className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
               activeSubTab === "proposals"
-                ? "bg-[#7B1123] text-white shadow-sm shadow-[#7B1123]/25"
-                : "bg-white text-stone-700 border border-[#D8C7B5] hover:bg-stone-200 hover:text-stone-950 hover:border-stone-400"
+                ? "bg-[#7B1123] text-white shadow-md shadow-[#7B1123]/30 font-black"
+                : "bg-white text-stone-950 border-2 border-stone-300 hover:bg-stone-200 hover:text-black hover:border-stone-500 font-black"
             }`}
           >
             Timetable Change Proposals ({props.length})

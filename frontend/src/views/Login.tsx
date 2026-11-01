@@ -242,7 +242,7 @@ export default function Login({ onSuccess }: LoginProps) {
             department: deptValue,
             org: orgValue,
             active: false
-          }).catch(() => {});
+          }).catch(() => { });
 
           setInfoMsg(
             `Registration submitted for ${cleanUsername}! A verification email has been sent to ${cleanEmail}. Please verify your email address. Once verified, your account will await Dean's Office approval before activation.`
@@ -307,8 +307,8 @@ export default function Login({ onSuccess }: LoginProps) {
         const targetEmail = cleanEmail.includes("@")
           ? cleanEmail
           : cleanUsername.includes("@")
-          ? cleanUsername
-          : `${cleanUsername}@cit.ac.in`;
+            ? cleanUsername
+            : `${cleanUsername}@cit.ac.in`;
 
         const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
           email: targetEmail,
@@ -499,15 +499,15 @@ export default function Login({ onSuccess }: LoginProps) {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
         <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          
+
           {/* =========================================================================
               LEFT COLUMN: AUTHENTICATION & ROLE ACCESS FORM
               ========================================================================= */}
           <div className="lg:col-span-5 flex flex-col space-y-5">
-            
+
             {/* Primary Login Card */}
             <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm">
-              
+
               {/* Header inside Card */}
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -524,22 +524,20 @@ export default function Login({ onSuccess }: LoginProps) {
                   <button
                     type="button"
                     onClick={() => handleSwitchMode("signin")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      mode === "signin"
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${mode === "signin"
                         ? "bg-[#7B1123] text-white shadow-sm"
                         : "text-stone-600 hover:text-stone-900"
-                    }`}
+                      }`}
                   >
                     Sign In
                   </button>
                   <button
                     type="button"
                     onClick={() => handleSwitchMode("register")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      mode === "register"
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${mode === "register"
                         ? "bg-[#7B1123] text-white shadow-sm"
                         : "text-stone-600 hover:text-stone-900"
-                    }`}
+                      }`}
                   >
                     Register
                   </button>
@@ -591,7 +589,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
               {/* Form Content */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                
+
                 {/* 1. ROLE SELECTOR */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -603,7 +601,7 @@ export default function Login({ onSuccess }: LoginProps) {
                       <span className="text-[10px] text-stone-500 font-medium">Auto-fills credentials</span>
                     )}
                   </div>
-                  
+
                   <div className="relative">
                     <select
                       value={selectedRole}
@@ -847,11 +845,10 @@ export default function Login({ onSuccess }: LoginProps) {
                       key={r.id}
                       type="button"
                       onClick={() => handleQuickDemoLogin(r)}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer ${
-                        selectedRole === r.id
+                      className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer ${selectedRole === r.id
                           ? "bg-[#7B1123]/10 border-[#7B1123] text-[#7B1123] shadow-xs"
                           : "border-[#E8DEC8] hover:border-[#7B1123]/40 bg-[#FAF7F2] hover:bg-white text-stone-800"
-                      }`}
+                        }`}
                     >
                       <r.icon className="w-4 h-4 shrink-0 text-[#7B1123]" />
                       <div className="truncate">
@@ -890,7 +887,7 @@ export default function Login({ onSuccess }: LoginProps) {
               RIGHT COLUMN: CIT BANNER PICTURE & DETAILED SYSTEM OVERVIEW
               ========================================================================= */}
           <div className={`lg:col-span-7 flex flex-col space-y-6 ${showMobileDetails ? "block" : "hidden lg:flex"}`}>
-            
+
             {/* 1. CIT LOGO & CAMPUS BANNER PICTURE */}
             <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-3 sm:p-4 overflow-hidden backdrop-blur-sm">
               <div className="relative rounded-xl overflow-hidden border border-[#EADCC9] shadow-inner bg-[#FAF7F2]">

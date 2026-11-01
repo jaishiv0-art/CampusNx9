@@ -153,10 +153,10 @@ export const DEMO_USERS = [
 ];
 
 export const statusColor: Record<string, string> = {
-  approved: "bg-emerald-500/15 text-emerald-800 border border-emerald-500/40 font-semibold",
-  pending: "bg-amber-500/15 text-amber-800 border border-amber-500/40 font-semibold",
-  rejected: "bg-rose-500/15 text-rose-800 border border-rose-500/40 font-semibold",
-  alternative_offered: "bg-sky-500/15 text-sky-800 border border-sky-500/40 font-semibold",
+  approved: "bg-emerald-100 text-emerald-950 border-2 border-emerald-400 font-black",
+  pending: "bg-amber-100 text-amber-950 border-2 border-amber-400 font-black",
+  rejected: "bg-rose-100 text-rose-950 border-2 border-rose-400 font-black",
+  alternative_offered: "bg-sky-100 text-sky-950 border-2 border-sky-400 font-black",
   cancelled: "bg-slate-200 text-slate-700 border border-slate-300 font-semibold",
   conflict: "bg-red-500/15 text-red-800 border border-red-500/40 font-semibold"
 };
