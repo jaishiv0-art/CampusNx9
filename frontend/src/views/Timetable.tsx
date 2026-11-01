@@ -234,7 +234,7 @@ export default function Timetable({ user }: { user: User }) {
     return (
       <td
         key={p}
-        className="p-1.5 border-r border-[#E8DEC8] align-top min-w-[130px] hover:bg-[#FAF7F2]/80 transition-colors"
+        className="p-1.5 border-r border-[#E8DEC8] align-top min-w-[130px] hover:bg-stone-200/90/80 transition-colors"
       >
         {items.length === 0 ? (
           <div className="h-full min-h-[56px] flex items-center justify-center text-stone-300 text-[11px] select-none font-mono">
@@ -603,7 +603,7 @@ export default function Timetable({ user }: { user: User }) {
               {DAYS.map((d) => {
                 const daySessions = rows.filter((r) => r.day === d);
                 return (
-                  <tr key={d} className="hover:bg-[#FAF7F2]/40 transition-colors">
+                  <tr key={d} className="hover:bg-stone-200/90 transition-colors">
                     {/* Day Column (Sticky Left) */}
                     <td className="p-3 font-semibold text-stone-900 align-top bg-[#FAF5ED]/90 sticky left-0 z-10 border-r border-[#E8DEC8] shadow-xs">
                       <div className="text-sm font-bold text-stone-900 font-mono tracking-wide">
@@ -659,7 +659,7 @@ export default function Timetable({ user }: { user: User }) {
                 <tr
                   key={r.session_id}
                   onClick={() => setSelectedSession(r)}
-                  className="hover:bg-[#FAF7F2] transition-colors cursor-pointer"
+                  className="hover:bg-stone-200/90 transition-colors cursor-pointer"
                 >
                   <td className="p-3 font-mono font-bold text-[#7B1123]">{r.session_id}</td>
                   <td className="p-3 font-bold text-stone-900">{r.course_id}</td>

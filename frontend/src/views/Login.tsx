@@ -579,13 +579,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 </div>
               )}
 
-              {/* Institutional Rule Notice Banner */}
-              <div className="mb-5 p-3 rounded-xl bg-[#FAF5ED] border border-[#E8DEC8] flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-[#7B1123] shrink-0 mt-0.5" />
-                <p className="text-xs text-stone-700 leading-snug">
-                  <strong>Institutional Governance Rule:</strong> Nobody can approve their own booking or change request; cross-role verification strictly enforced by backend.
-                </p>
-              </div>
+
 
               {/* Form Content */}
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -593,12 +587,12 @@ export default function Login({ onSuccess }: LoginProps) {
                 {/* 1. ROLE SELECTOR */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-stone-700 flex items-center gap-1.5 uppercase tracking-wide">
+                    <label className="text-xs font-black text-stone-900 flex items-center gap-1.5 uppercase tracking-wide">
                       <Shield className="w-3.5 h-3.5 text-[#7B1123]" />
                       Select Institutional Role
                     </label>
                     {mode === "signin" && (
-                      <span className="text-[10px] text-stone-500 font-medium">Auto-fills credentials</span>
+                      <span className="text-xs text-stone-700 font-bold">Auto-fills credentials</span>
                     )}
                   </div>
 
@@ -629,9 +623,9 @@ export default function Login({ onSuccess }: LoginProps) {
                     <div className="text-xs">
                       <div className="font-bold text-stone-900 flex items-center gap-2">
                         <span>{currentRoleInfo.title}</span>
-                        <span className="font-normal text-stone-500 font-mono text-[11px]">({currentRoleInfo.subtitle})</span>
+                        <span className="font-bold text-stone-700 font-mono text-xs">({currentRoleInfo.subtitle})</span>
                       </div>
-                      <p className="text-stone-600 text-[11px] mt-0.5 leading-snug">
+                      <p className="text-stone-900 text-xs mt-0.5 leading-snug font-semibold">
                         {currentRoleInfo.desc}
                       </p>
                     </div>
@@ -641,7 +635,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 {/* 2. REGISTRATION-ONLY FIELDS */}
                 {mode === "register" && (
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-black text-stone-900 mb-1">
                       Full Legal Name
                     </label>
                     <div className="relative">
@@ -651,7 +645,7 @@ export default function Login({ onSuccess }: LoginProps) {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="Dr. Rajesh Sharma"
-                        className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
+                        className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
                       />
                       <UserIcon className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                     </div>
@@ -660,7 +654,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
                 {/* Email Address */}
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-black text-stone-900 mb-1">
                     Institutional Email Address (@cit.ac.in)
                   </label>
                   <div className="relative">
@@ -685,7 +679,7 @@ export default function Login({ onSuccess }: LoginProps) {
                         }
                       }}
                       placeholder="user@cit.ac.in"
-                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
                     />
                     <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                   </div>
@@ -693,7 +687,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
                 {/* Username */}
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-black text-stone-900 mb-1">
                     Username / Handle
                   </label>
                   <div className="relative">
@@ -703,7 +697,7 @@ export default function Login({ onSuccess }: LoginProps) {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="e.g. admin, coord_cse, fac_f01"
-                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
                     />
                     <UserIcon className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                   </div>
@@ -712,7 +706,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 {/* Contextual Academic Department / Org Fields */}
                 {mode === "register" && (selectedRole === "DEPARTMENT_COORDINATOR" || selectedRole === "FACULTY") && (
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-black text-stone-900 mb-1">
                       Academic Department
                     </label>
                     <select
@@ -734,7 +728,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
                 {mode === "register" && selectedRole === "CLUB_REPRESENTATIVE" && (
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-black text-stone-900 mb-1">
                       Student Society / Club Name
                     </label>
                     <input
@@ -742,7 +736,7 @@ export default function Login({ onSuccess }: LoginProps) {
                       value={clubName}
                       onChange={(e) => setClubName(e.target.value)}
                       placeholder="e.g. Dramatics Society, Robotics Club"
-                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
                     />
                   </div>
                 )}
@@ -750,7 +744,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 {/* Password with Eye Toggle and Auto-Fill Helper */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-stone-700">
+                    <label className="block text-xs font-black text-stone-900">
                       Password
                     </label>
                     {mode === "signin" && (
@@ -775,7 +769,7 @@ export default function Login({ onSuccess }: LoginProps) {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter password"
-                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 pr-10 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 pr-10 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
                     />
                     <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                     <button
@@ -791,7 +785,7 @@ export default function Login({ onSuccess }: LoginProps) {
                   {/* Forgot Password Link in Signin Mode */}
                   {mode === "signin" && (
                     <div className="flex items-center justify-between text-xs mt-1.5">
-                      <span className="text-stone-500">Need account assistance?</span>
+                      <span className="text-stone-800 font-bold">Need account assistance?</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -847,13 +841,13 @@ export default function Login({ onSuccess }: LoginProps) {
                       onClick={() => handleQuickDemoLogin(r)}
                       className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer ${selectedRole === r.id
                           ? "bg-[#7B1123]/10 border-[#7B1123] text-[#7B1123] shadow-xs"
-                          : "border-[#E8DEC8] hover:border-[#7B1123]/40 bg-[#FAF7F2] hover:bg-white text-stone-800"
+                          : "border-2 border-stone-300 hover:border-[#7B1123] bg-stone-50 hover:bg-stone-200 text-stone-950 hover:text-black font-bold shadow-2xs"
                         }`}
                     >
                       <r.icon className="w-4 h-4 shrink-0 text-[#7B1123]" />
                       <div className="truncate">
                         <div className="font-bold truncate">{r.title}</div>
-                        <div className="text-[10px] text-stone-500 font-mono truncate">{r.demoUser}</div>
+                        <div className="text-xs text-stone-700 font-mono font-bold truncate group-hover:text-stone-950">{r.demoUser}</div>
                       </div>
                     </button>
                   ))}
@@ -867,7 +861,7 @@ export default function Login({ onSuccess }: LoginProps) {
               <button
                 type="button"
                 onClick={() => setShowMobileDetails(!showMobileDetails)}
-                className="w-full py-2.5 px-4 bg-white/90 border border-[#E8DCBE] rounded-xl text-xs font-bold text-stone-700 flex items-center justify-between shadow-xs"
+                className="w-full py-2.5 px-4 bg-white/90 border border-[#E8DCBE] rounded-xl text-xs font-black text-stone-900 flex items-center justify-between shadow-xs"
               >
                 <span className="flex items-center gap-2 text-[#7B1123]">
                   <Target className="w-4 h-4" />
@@ -922,47 +916,47 @@ export default function Login({ onSuccess }: LoginProps) {
                 </div>
               </div>
 
-              <p className="text-stone-700 text-sm leading-relaxed">
+              <p className="text-stone-950 text-sm leading-relaxed font-semibold">
                 Hand-made campus timetables are notoriously fragile: faculty clashes, venue double-bookings, lab collisions during lunch, and mid-semester disruptions routinely break academic schedules. <strong>CampusNx9</strong> replaces manual guesswork with a mathematically verified, rule-enforced operating system designed to achieve:
               </p>
 
               <div className="grid sm:grid-cols-2 gap-3 pt-1">
-                <div className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1">
+                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     Zero Hard Violations
                   </div>
-                  <p className="text-xs text-stone-600 leading-snug">
+                  <p className="text-xs text-stone-900 leading-snug font-bold">
                     Strict mathematical guarantees: 0 professor double-bookings, 0 room overlaps, and strictly enforced lab continuity.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1">
+                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     Conflict-Free Elective Baskets
                   </div>
-                  <p className="text-xs text-stone-600 leading-snug">
+                  <p className="text-xs text-stone-900 leading-snug font-bold">
                     Synchronized elective slots (Basket 1, Basket 2) run in parallel across departments without any inter-batch conflicts.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1">
+                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     Lunch Break Protected
                   </div>
-                  <p className="text-xs text-stone-600 leading-snug">
+                  <p className="text-xs text-stone-900 leading-snug font-bold">
                     Period 5 to 6 transition (13:00 – 14:00) is institutional lunch hour. Zero academic sessions or mandatory events are ever scheduled.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1">
+                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     Smart Minimal Rescheduling
                   </div>
-                  <p className="text-xs text-stone-600 leading-snug">
+                  <p className="text-xs text-stone-900 leading-snug font-bold">
                     When disruptions happen (faculty emergency or weather closures), solver finds replacement slots with minimal timetable ripple.
                   </p>
                 </div>
@@ -1091,7 +1085,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
             <form onSubmit={handleResetPassword} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                <label className="block text-xs font-black text-stone-900 mb-1">
                   Institutional Email Address
                 </label>
                 <input

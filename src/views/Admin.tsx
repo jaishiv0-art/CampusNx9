@@ -63,7 +63,7 @@ export default function Admin() {
         </div>
 
         <div className="flex flex-wrap gap-2.5">
-          <label className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 cursor-pointer">
+          <label className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 cursor-pointer">
             <Upload className="w-3.5 h-3.5" />
             Import Dataset JSON
             <input
@@ -91,7 +91,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("e", "/admin/exams/generate")}
           >
@@ -100,7 +100,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("b", "/admin/bookings/decide-dataset")}
           >
@@ -109,7 +109,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("v", "/admin/validate", "GET")}
           >
@@ -118,7 +118,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("d", "/disruptions/sample")}
           >
@@ -127,7 +127,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("x", "/admin/export")}
           >

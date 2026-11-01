@@ -60,7 +60,7 @@ export default function Exams() {
               { id: "AM", time: "09:30–11:30" },
               { id: "PM", time: "14:00–16:00" }
             ].map(({ id: s, time }) => (
-              <tr key={s} className="hover:bg-slate-900/20 transition-colors">
+              <tr key={s} className="hover:bg-stone-200/90 transition-colors">
                 <td className="p-3.5 font-bold text-slate-200 align-top bg-slate-950/40 border-r border-slate-800">
                   <div className="text-sm text-indigo-400 font-mono">{s}</div>
                   <div className="text-[10px] text-slate-500 font-sans mt-0.5">{time}</div>
