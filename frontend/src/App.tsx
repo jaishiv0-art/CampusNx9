@@ -30,9 +30,18 @@ export default function App() {
       });
   }, []);
 
-  const handleLogout = () => {
-    supabase.auth.signOut().catch(() => {});
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn("[Auth] Supabase signout notice", e);
+    }
     setToken("");
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("supabase.auth.token");
+      sessionStorage.clear();
+    } catch {}
     setUser(null);
   };
 
@@ -79,7 +88,6 @@ export default function App() {
           user={user}
           tab={tab}
           setTab={setTab}
-          onUserSwitch={(u) => setUser(u)}
           onLogout={handleLogout}
         />
       </div>

@@ -18,13 +18,12 @@ interface NavbarProps {
   user: User;
   tab: string;
   setTab: (tab: string) => void;
-  onUserSwitch: (user: User) => void;
+  onUserSwitch?: (user: User) => void;
   onLogout: () => void;
 }
 
 export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [switching, setSwitching] = useState(false);
 
   const has = (k: string) => user.permissions.includes("*") || user.permissions.includes(k);
 
@@ -41,23 +40,6 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
     { id: "assistant", label: "AI Scheduler NLP", icon: Sparkles }
   ].filter(Boolean) as { id: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
 
-  const switchRole = async (demo: typeof DEMO_USERS[0]) => {
-    setSwitching(true);
-    try {
-      const res = await api("/auth/login", "POST", {
-        username: demo.username,
-        password: demo.password
-      });
-      setToken(res.token);
-      const me = await api<User>("/me");
-      onUserSwitch(me);
-      setDropdownOpen(false);
-    } catch (e: any) {
-      alert("Role switch failed: " + e.message);
-    } finally {
-      setSwitching(false);
-    }
-  };
 
   const badge = roleBadgeInfo[user.role as RoleType] || {
     label: user.role,
@@ -144,38 +126,35 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-[#FFFDF9] rounded-2xl shadow-2xl p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150 border-2 border-stone-300 ring-2 ring-black/5">
+                <div className="absolute right-0 mt-2 w-80 bg-[#FFFDF9] rounded-2xl shadow-2xl p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150 border-2 border-stone-300 ring-2 ring-black/5">
                   <div className="px-3 py-2 border-b border-stone-200">
-                    <p className="text-xs font-black text-stone-950">Switch Active Role</p>
-                    <p className="text-[11px] text-stone-700 font-bold">Instantly test the 4 competition user roles</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-black text-stone-950">Active Session</p>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
+                        Session Locked
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-700 font-semibold mt-0.5">
+                      {user.username} · {badge.label}
+                    </p>
                   </div>
-                  <div className="py-1 space-y-1">
-                    {DEMO_USERS.map((demo) => {
-                      const isCurrent = user.username === demo.username;
-                      return (
-                        <button
-                          key={demo.username}
-                          disabled={switching || isCurrent}
-                          onClick={() => switchRole(demo)}
-                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center justify-between transition-all group ${
-                            isCurrent
-                              ? "bg-[#7B1123]/10 text-[#7B1123] font-bold border border-[#7B1123]/30 shadow-xs"
-                              : "bg-white text-stone-950 hover:bg-stone-200 hover:text-black border-2 border-stone-200 hover:border-stone-400 font-bold shadow-2xs"
-                          }`}
-                        >
-                          <div>
-                            <div className={`font-bold ${isCurrent ? "text-[#7B1123]" : "text-stone-950 group-hover:text-black"}`}>
-                              {demo.label}
-                            </div>
-                            <div className={`text-[10px] mt-0.5 ${isCurrent ? "text-[#7B1123]/90 font-medium" : "text-stone-700 group-hover:text-stone-950 font-bold"}`}>
-                              {demo.badge}
-                            </div>
-                          </div>
-                          {isCurrent && <CheckCircle2 className="w-4 h-4 text-[#7B1123] shrink-0" />}
-                        </button>
-                      );
-                    })}
+                  <div className="p-3 my-2 bg-stone-100 rounded-xl border border-stone-200 text-xs text-stone-800 space-y-1">
+                    <p className="font-bold text-stone-950">Role Binding Invariant Active</p>
+                    <p className="text-[11px] text-stone-700 leading-relaxed font-medium">
+                      In-app role switching is disabled by campus security policy. To access a different role or institutional account, you must log out.
+                    </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full text-center px-4 py-2.5 rounded-xl text-xs font-bold bg-[#7B1123] hover:bg-[#5f0c1b] text-white transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out to Switch Account</span>
+                  </button>
                 </div>
               )}
             </div>

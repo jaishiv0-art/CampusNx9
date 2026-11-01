@@ -288,7 +288,8 @@ export default function Login({ onSuccess }: LoginProps) {
           const loginIdentifier = cleanUsername || cleanEmail;
           const res = await api("/auth/login", "POST", {
             username: loginIdentifier,
-            password: cleanPass
+            password: cleanPass,
+            role: selectedRole
           });
 
           setToken(res.token);
@@ -320,7 +321,8 @@ export default function Login({ onSuccess }: LoginProps) {
           try {
             const res = await api("/auth/login", "POST", {
               username: cleanUsername || cleanEmail,
-              password: cleanPass
+              password: cleanPass,
+              role: selectedRole
             });
             setToken(res.token);
             const me = await api<User>("/me");
@@ -385,6 +387,14 @@ export default function Login({ onSuccess }: LoginProps) {
           );
         }
 
+        // Strict 1-to-1 Role Binding: user cannot select a different role than their authorized profile
+        if (profile.role && profile.role.toUpperCase() !== selectedRole.toUpperCase()) {
+          await supabase.auth.signOut();
+          throw new Error(
+            `Role Mismatch: Your institutional account is authorized strictly as "${profile.role}", not as "${selectedRole}". Access denied.`
+          );
+        }
+
         setToken(authData.session.access_token);
         const me = await api<User>("/me");
         if (onSuccess) onSuccess(me);
@@ -395,7 +405,8 @@ export default function Login({ onSuccess }: LoginProps) {
       const loginIdentifier = cleanUsername || cleanEmail;
       const res = await api("/auth/login", "POST", {
         username: loginIdentifier,
-        password: cleanPass
+        password: cleanPass,
+        role: selectedRole
       });
 
       setToken(res.token);
