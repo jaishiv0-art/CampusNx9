@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { User, RoleType, DEMO_USERS, roleBadgeInfo, setToken, api } from "../api";
+import React from "react";
+import { User, RoleType, roleBadgeInfo, setToken, api } from "../api";
 import {
   Calendar,
   Sparkles,
@@ -10,20 +10,16 @@ import {
   Building2,
   Users,
   Compass,
-  CheckCircle2,
-  ChevronDown
 } from "lucide-react";
 
 interface NavbarProps {
   user: User;
   tab: string;
   setTab: (tab: string) => void;
-  onUserSwitch?: (user: User) => void;
   onLogout: () => void;
 }
 
-export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: NavbarProps) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+export default function Navbar({ user, tab, setTab, onLogout }: NavbarProps) {
 
   const has = (k: string) => user.permissions.includes("*") || user.permissions.includes(k);
 
@@ -110,59 +106,21 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
             })}
           </nav>
 
-          {/* User Profile & Quick Role Switcher */}
+          {/* User Profile & Active Session Indicator (Role Locked) */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Quick Role Switcher Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${badge.bg} ${badge.border} ${badge.text} hover:brightness-110`}
-                title="Quickly switch between official roles"
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span className="max-w-[120px] truncate">{user.username}</span>
-                <span className="hidden lg:inline-block">({badge.label})</span>
-                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-              </button>
-
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-[#FFFDF9] rounded-2xl shadow-2xl p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150 border-2 border-stone-300 ring-2 ring-black/5">
-                  <div className="px-3 py-2 border-b border-stone-200">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-black text-stone-950">Active Session</p>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
-                        Session Locked
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-stone-700 font-semibold mt-0.5">
-                      {user.username} · {badge.label}
-                    </p>
-                  </div>
-                  <div className="p-3 my-2 bg-stone-100 rounded-xl border border-stone-200 text-xs text-stone-800 space-y-1">
-                    <p className="font-bold text-stone-950">Role Binding Invariant Active</p>
-                    <p className="text-[11px] text-stone-700 leading-relaxed font-medium">
-                      In-app role switching is disabled by campus security policy. To access a different role or institutional account, you must log out.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDropdownOpen(false);
-                      onLogout();
-                    }}
-                    className="w-full text-center px-4 py-2.5 rounded-xl text-xs font-bold bg-[#7B1123] hover:bg-[#5f0c1b] text-white transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Sign Out to Switch Account</span>
-                  </button>
-                </div>
-              )}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold ${badge.bg} ${badge.border} ${badge.text}`}
+              title={`Active Session: ${user.username} (${badge.label}) - Role Locked`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span className="max-w-[120px] truncate">{user.username}</span>
+              <span className="hidden lg:inline-block">({badge.label})</span>
             </div>
 
-            {/* Sign Out Button */}
+            {/* Secure Sign Out Button */}
             <button
               onClick={onLogout}
-              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20"
+              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20 cursor-pointer"
               title="Sign Out"
               aria-label="Sign Out"
             >

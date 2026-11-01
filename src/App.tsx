@@ -11,6 +11,21 @@ import Admin from "./views/Admin";
 import Exams from "./views/Exams";
 import Assistant from "./views/Assistant";
 
+const getDefaultTabForRole = (role?: string) => {
+  switch (role) {
+    case "ADMIN":
+      return "admin";
+    case "DEPARTMENT_COORDINATOR":
+      return "timetable";
+    case "FACULTY":
+      return "timetable";
+    case "CLUB_REPRESENTATIVE":
+      return "bookings";
+    default:
+      return "timetable";
+  }
+};
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [tab, setTab] = useState("timetable");
@@ -20,6 +35,7 @@ export default function App() {
     api<User>("/me")
       .then((u) => {
         setUser(u);
+        setTab(getDefaultTabForRole(u.role));
       })
       .catch(() => {
         setToken("");
@@ -38,11 +54,11 @@ export default function App() {
     }
     setToken("");
     try {
-      localStorage.removeItem("token");
-      localStorage.removeItem("supabase.auth.token");
+      localStorage.clear();
       sessionStorage.clear();
     } catch {}
     setUser(null);
+    setTab("timetable");
   };
 
   if (loading) {
@@ -61,7 +77,14 @@ export default function App() {
   }
 
   if (!user) {
-    return <Login onSuccess={(u) => setUser(u)} />;
+    return (
+      <Login
+        onSuccess={(u) => {
+          setUser(u);
+          setTab(getDefaultTabForRole(u.role));
+        }}
+      />
+    );
   }
 
   return (
@@ -105,11 +128,6 @@ export default function App() {
           {tab === "assistant" && <Assistant />}
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-[#E8DEC8] bg-[#FAF5ED]/90 py-4 text-center text-xs text-stone-600 relative z-10">
-        Chilika Institute of Technology (CIT) · CampusNx9 Timetable & Venue Management Platform · Zero Hard Violations Enforced
-      </footer>
     </div>
   );
 }
