@@ -7,9 +7,7 @@ import {
   Sparkles,
   CheckCircle2,
   Clock,
-  Layers,
-  Zap,
-  Database
+  Layers
 } from "lucide-react";
 
 interface RoleDashboardOverviewProps {
@@ -49,20 +47,7 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="glow-pill-emerald">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>0 Hard Violations (Verified)</span>
-            </div>
-            <div className="glow-pill-indigo hidden sm:flex">
-              <Database className="w-3.5 h-3.5 text-[#7B1123]" />
-              <span>Supabase / PostgreSQL</span>
-            </div>
-            <div className="glow-pill-indigo hidden md:flex">
-              <Zap className="w-3.5 h-3.5 text-[#7B1123]" />
-              <span>CP-SAT OR-Tools 9.15</span>
-            </div>
-          </div>
+
         </div>
       </div>
 

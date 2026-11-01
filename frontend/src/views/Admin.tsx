@@ -57,9 +57,9 @@ export default function Admin() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Settings className="w-4 h-4 text-indigo-400" />
-            <h2 className="text-base font-bold text-white">Dean's Office Control Center & Solvers</h2>
+            <h2 className="text-base font-bold text-stone-900">Dean's Office Control Center & Solvers</h2>
           </div>
-          <span className="text-xs text-slate-400 font-mono">Master Administrator</span>
+          <span className="text-xs text-slate-600 font-mono font-semibold">Master Administrator</span>
         </div>
 
         <div className="flex flex-wrap gap-2.5">
@@ -152,13 +152,13 @@ export default function Admin() {
                       ✓
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
                         <span>100% Clash-Free Academic Timetable Generated</span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
                           {out.status || "FEASIBLE"}
                         </span>
                       </h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-slate-600 mt-0.5">
                         Deterministic CP-SAT solver executed with zero hard constraint violations.
                       </p>
                     </div>
@@ -177,7 +177,7 @@ export default function Admin() {
                 {/* Metrics Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400 uppercase font-mono block">Hard Violations</span>
+                    <span className="text-[10px] text-slate-600 uppercase font-mono font-semibold block">Hard Violations</span>
                     <div className="text-sm font-bold text-emerald-400 flex items-center gap-1 mt-0.5">
                       <span>{out.hard_violations_count ?? out.hard_violations_excluding_exams?.length ?? 0}</span>
                       <span className="text-[10px] text-emerald-300 font-normal">(Zero Tolerated)</span>
@@ -185,14 +185,14 @@ export default function Admin() {
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400 uppercase font-mono block">Scheduled Sessions</span>
-                    <div className="text-sm font-bold text-white mt-0.5">
-                      {out.sessions ?? 189} <span className="text-[10px] text-slate-400 font-normal">/ 189</span>
+                    <span className="text-[10px] text-slate-600 uppercase font-mono font-semibold block">Scheduled Sessions</span>
+                    <div className="text-sm font-bold text-stone-900 mt-0.5">
+                      {out.sessions ?? 189} <span className="text-[10px] text-slate-600 font-normal">/ 189</span>
                     </div>
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400 uppercase font-mono block">Soft Penalty Total</span>
+                    <span className="text-[10px] text-slate-600 uppercase font-mono font-semibold block">Soft Penalty Total</span>
                     <div className="text-sm font-bold text-indigo-300 mt-0.5">
                       {out.soft_total ?? (typeof out.soft === "object" ? Object.values(out.soft).reduce((a: any, b: any) => a + (typeof b === "number" ? b : 0), 0) : 0)}
                       <span className="text-[10px] text-slate-400 font-normal"> pts</span>
@@ -200,7 +200,7 @@ export default function Admin() {
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400 uppercase font-mono block">Pre-Scan Integrity</span>
+                    <span className="text-[10px] text-slate-600 uppercase font-mono font-semibold block">Pre-Scan Integrity</span>
                     <div className="text-sm font-bold text-emerald-400 mt-0.5 text-[11px] truncate">
                       ✓ Clean & Verified
                     </div>
@@ -209,8 +209,8 @@ export default function Admin() {
 
                 {/* Soft Penalties Detail */}
                 {out.soft_penalties && (
-                  <div className="p-2.5 rounded-xl bg-slate-950/40 border border-slate-800 text-[11px] text-slate-400 flex flex-wrap items-center gap-3">
-                    <span className="font-semibold text-slate-300">Penalty Breakdown:</span>
+                  <div className="p-2.5 rounded-xl bg-stone-100 border border-stone-200 text-[11px] text-slate-700 flex flex-wrap items-center gap-3">
+                    <span className="font-semibold text-stone-900">Penalty Breakdown:</span>
                     <span>S1 (Faculty Avoid): <strong className="text-slate-200">{out.soft_penalties.S1 ?? 0}</strong></span>
                     <span>S2 (Free Gaps): <strong className="text-slate-200">{out.soft_penalties.S2 ?? 0}</strong></span>
                     <span>S4 (Course Dup): <strong className="text-slate-200">{out.soft_penalties.S4 ?? 0}</strong></span>
@@ -220,13 +220,13 @@ export default function Admin() {
                 )}
 
                 {/* Export Path Indicator */}
-                <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1 border-t border-slate-800/60">
+                <div className="flex items-center justify-between text-[11px] font-mono text-slate-600 pt-1 border-t border-stone-200">
                   <span>Export Target: <code className="text-emerald-300 bg-emerald-950/40 px-1.5 py-0.5 rounded">{out.export_path || "exports/schedule.json"}</code></span>
                   <span className="text-slate-500">Official Validator Ready</span>
                 </div>
               </div>
             ) : (
-              <pre className="font-mono text-xs overflow-x-auto text-indigo-300">{JSON.stringify(out, null, 2)}</pre>
+              <pre className="font-mono text-xs overflow-x-auto text-indigo-700">{JSON.stringify(out, null, 2)}</pre>
             )}
           </div>
         )}
@@ -237,12 +237,12 @@ export default function Admin() {
         {/* Room Utilization */}
         <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-indigo-400" />
               Room Capacity & Utilization (45 Teaching Hours/Week)
             </h3>
             {util && (
-              <span className="text-[10px] text-amber-300">
+              <span className="text-[10px] text-amber-800 font-semibold">
                 Low-fill (&lt;40%): {util.sessions_below_40pct_fill}
               </span>
             )}
@@ -253,14 +253,14 @@ export default function Admin() {
               const pct = Math.round(r.utilization * 100);
               return (
                 <div key={r.room_id} className="flex items-center gap-3 text-xs">
-                  <span className="w-20 font-mono text-slate-300 shrink-0">{r.room_id}</span>
+                  <span className="w-20 font-mono text-stone-700 shrink-0">{r.room_id}</span>
                   <div className="flex-1 bg-slate-800/80 h-2.5 rounded-full overflow-hidden border border-slate-700/50">
                     <div
                       className="bg-gradient-to-r from-indigo-500 to-violet-500 h-full rounded-full transition-all duration-300"
                       style={{ width: `${Math.min(pct, 100)}%` }}
                     />
                   </div>
-                  <span className="w-12 text-right font-mono text-slate-400 text-[11px] shrink-0">
+                  <span className="w-12 text-right font-mono text-slate-600 text-[11px] shrink-0">
                     {pct}% ({r.hours}h)
                   </span>
                 </div>
@@ -272,7 +272,7 @@ export default function Admin() {
         {/* Priority Order & System Users */}
         <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
           <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
+            <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2 mb-2">
               <ShieldCheck className="w-4 h-4 text-amber-400" />
               Spectra 6-Tier Institutional Priority
             </h3>
@@ -310,7 +310,7 @@ export default function Admin() {
           </div>
 
           <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
+            <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2 mb-2">
               <Users className="w-4 h-4 text-purple-400" />
               Configured Institutional Users ({users.length})
             </h3>
@@ -334,11 +334,11 @@ export default function Admin() {
       {/* Audit Log Table */}
       <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
             <History className="w-4 h-4 text-indigo-400" />
             Institutional Audit History Log
           </h3>
-          <span className="text-xs text-slate-400 font-mono">{audit.length} Events Logged</span>
+          <span className="text-xs text-slate-600 font-mono font-semibold">{audit.length} Events Logged</span>
         </div>
 
         <div className="max-h-56 overflow-y-auto space-y-1.5 text-xs font-mono">
@@ -349,10 +349,10 @@ export default function Admin() {
             >
               <div className="flex items-center gap-2">
                 <span className="text-slate-500">{a.ts}</span>
-                <span className="text-indigo-300 font-bold">{a.actor}</span>
-                <span className="text-white">{a.action}</span>
+                <span className="text-indigo-700 font-bold">{a.actor}</span>
+                <span className="text-stone-900 font-medium">{a.action}</span>
               </div>
-              <span className="text-slate-400 truncate max-w-sm">{a.detail}</span>
+              <span className="text-slate-600 truncate max-w-sm">{a.detail}</span>
             </div>
           ))}
 

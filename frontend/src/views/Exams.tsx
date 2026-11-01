@@ -46,7 +46,7 @@ export default function Exams() {
       <div className="glass-card rounded-2xl border border-slate-800 overflow-x-auto shadow-2xl p-0">
         <table className="min-w-full text-xs border-collapse">
           <thead>
-            <tr className="bg-slate-900/90 border-b border-slate-800 text-slate-300">
+            <tr className="bg-[#FAF5ED] border-b border-[#E8DEC8] text-stone-800 font-semibold">
               <th className="p-3.5 text-left w-28 font-bold">Session Slot</th>
               {days.map((d) => (
                 <th key={d} className="p-3.5 text-center border-l border-slate-800 font-bold tracking-wider">
@@ -75,7 +75,7 @@ export default function Exams() {
                           key={e.exam_id}
                           className="mb-2 rounded-xl p-2.5 bg-purple-500/10 border border-purple-500/25 hover:border-purple-400/50 transition-all shadow-sm"
                         >
-                          <div className="font-bold text-white text-xs">{e.exam_id}</div>
+                          <div className="font-bold text-stone-900 text-xs">{e.exam_id}</div>
                           <div className="text-[10px] text-purple-300/80 mt-1 flex items-center gap-1 font-mono">
                             <MapPin className="w-3 h-3 text-purple-400" />
                             {e.rooms.join(", ")}

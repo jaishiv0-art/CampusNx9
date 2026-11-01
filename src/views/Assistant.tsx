@@ -72,8 +72,8 @@ export default function Assistant() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">AI Scheduling & Disruption Copilot</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-base font-bold text-stone-900">AI Scheduling & Disruption Copilot</h2>
+              <p className="text-xs text-slate-600 font-medium">
                 Deterministic NLP parser · English & Hinglish support · Zero hard violation policy
               </p>
             </div>
@@ -138,7 +138,7 @@ export default function Assistant() {
 
       {/* Suggested Quick Prompts */}
       <div className="flex flex-wrap items-center gap-1.5 px-1">
-        <span className="text-[11px] text-slate-400 font-semibold mr-1">Try asking:</span>
+        <span className="text-[11px] text-slate-700 font-semibold mr-1">Try asking:</span>
         {SUGGESTIONS.map((s, i) => (
           <button
             key={i}

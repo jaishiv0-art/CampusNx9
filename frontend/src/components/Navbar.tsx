@@ -115,13 +115,13 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
                     active
-                      ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 shadow-sm shadow-indigo-500/20"
-                      : "text-slate-300 hover:text-white hover:bg-slate-800/50"
+                      ? "bg-[#7B1123] text-white border border-[#9b1d33] shadow-sm shadow-black/20"
+                      : "text-slate-200 hover:text-white hover:bg-slate-800/80 font-medium"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${active ? "text-indigo-400" : "text-slate-400"}`} />
+                  <Icon className={`w-4 h-4 ${active ? "text-white" : "text-slate-400"}`} />
                   {t.label}
                 </button>
               );
@@ -144,10 +144,10 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-72 glass-dropdown rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 border border-slate-700/80">
-                  <div className="px-3 py-2 border-b border-slate-800">
-                    <p className="text-xs font-semibold text-slate-200">Switch Active Role</p>
-                    <p className="text-[11px] text-slate-400">Instantly test the 4 competition user roles</p>
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 border border-stone-200 ring-1 ring-black/10">
+                  <div className="px-3 py-2 border-b border-stone-200">
+                    <p className="text-xs font-bold text-stone-900">Switch Active Role</p>
+                    <p className="text-[11px] text-stone-600 font-medium">Instantly test the 4 competition user roles</p>
                   </div>
                   <div className="py-1 space-y-1">
                     {DEMO_USERS.map((demo) => {
@@ -157,17 +157,21 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
                           key={demo.username}
                           disabled={switching || isCurrent}
                           onClick={() => switchRole(demo)}
-                          className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-all ${
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center justify-between transition-all group ${
                             isCurrent
-                              ? "bg-indigo-600/20 text-indigo-300 font-semibold border border-indigo-500/30"
-                              : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                              ? "bg-[#7B1123]/10 text-[#7B1123] font-bold border border-[#7B1123]/30 shadow-xs"
+                              : "text-stone-800 hover:bg-stone-200 hover:text-stone-950 border border-transparent hover:border-stone-400 font-medium"
                           }`}
                         >
                           <div>
-                            <div className="font-medium text-slate-100">{demo.label}</div>
-                            <div className="text-[10px] text-slate-400">{demo.badge}</div>
+                            <div className={`font-bold ${isCurrent ? "text-[#7B1123]" : "text-stone-900 group-hover:text-stone-950"}`}>
+                              {demo.label}
+                            </div>
+                            <div className={`text-[10px] mt-0.5 ${isCurrent ? "text-[#7B1123]/90 font-medium" : "text-stone-600 group-hover:text-stone-800 font-medium"}`}>
+                              {demo.badge}
+                            </div>
                           </div>
-                          {isCurrent && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
+                          {isCurrent && <CheckCircle2 className="w-4 h-4 text-[#7B1123] shrink-0" />}
                         </button>
                       );
                     })}

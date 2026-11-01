@@ -106,19 +106,19 @@ export default function Bookings({ user }: { user: User }) {
       <div className="space-y-4">
         <div className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
+            <h2 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-700" />
               AI Natural Language Venue Request (English / Hinglish)
             </h2>
-            <span className="text-[10px] text-slate-400 font-mono">Spectra Week 7</span>
+            <span className="text-[10px] text-slate-700 font-mono font-semibold">Spectra Week 7</span>
           </div>
 
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-700 font-medium leading-relaxed">
             Enter your booking needs in plain language. Our deterministic parser extracts the title, window, capacity, needs, and role-capped category before final confirmation.
           </p>
 
           <textarea
-            className="inp h-24 text-xs font-sans"
+            className="inp h-24 text-xs font-sans text-stone-900 placeholder:text-stone-500"
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="e.g. Spectra ke liye Friday ko 6 baje se auditorium chahiye, around 200 students..."
@@ -126,14 +126,14 @@ export default function Bookings({ user }: { user: User }) {
 
           {/* Quick Clickable Sample Prompts */}
           <div className="space-y-1.5 pt-1">
-            <p className="text-[11px] font-semibold text-slate-400">Quick test requests:</p>
+            <p className="text-[11px] font-semibold text-slate-700">Quick test requests:</p>
             <div className="flex flex-wrap gap-1.5">
               {SAMPLE_PROMPTS.map((p, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => setText(p)}
-                  className="text-[11px] text-left text-slate-300 hover:text-white px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition-all truncate max-w-full"
+                  className="text-[11px] text-left text-stone-800 hover:text-stone-950 px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 border border-[#D8C7B5] transition-all truncate max-w-full font-medium"
                 >
                   "{p.slice(0, 48)}..."
                 </button>
@@ -157,24 +157,24 @@ export default function Bookings({ user }: { user: User }) {
         {draft && (
           <div className="glass-card rounded-2xl p-5 border border-indigo-500/40 space-y-3 bg-indigo-950/20">
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 Review & Confirm Booking Specifications
               </h3>
-              <button onClick={() => setDraft(null)} className="text-slate-400 hover:text-white text-xs">
+              <button onClick={() => setDraft(null)} className="text-slate-600 hover:text-slate-900 text-xs font-medium">
                 Cancel
               </button>
             </div>
 
             {draft.follow_up && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 text-xs flex items-center gap-2 font-medium">
                 <HelpCircle className="w-4 h-4 shrink-0" />
                 <span>{draft.follow_up}</span>
               </div>
             )}
 
             {draft.warnings?.map((w: string, i: number) => (
-              <div key={i} className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+              <div key={i} className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 text-xs flex items-center gap-2 font-medium">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{w}</span>
               </div>
@@ -182,7 +182,7 @@ export default function Bookings({ user }: { user: User }) {
 
             <div className="space-y-2 text-xs">
               <div>
-                <label className="text-slate-400 block mb-1">Event Name</label>
+                <label className="text-slate-700 font-semibold block mb-1">Event Name</label>
                 <input
                   className="inp text-xs"
                   value={draft.title ?? ""}
@@ -191,7 +191,7 @@ export default function Bookings({ user }: { user: User }) {
               </div>
 
               <div>
-                <label className="text-slate-400 block mb-1">Requesting Organization</label>
+                <label className="text-slate-700 font-semibold block mb-1">Requesting Organization</label>
                 <input
                   className="inp text-xs"
                   value={draft.requester ?? ""}
@@ -201,7 +201,7 @@ export default function Bookings({ user }: { user: User }) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-slate-400 block mb-1">Expected Attendance</label>
+                  <label className="text-slate-700 font-semibold block mb-1">Expected Attendance</label>
                   <input
                     type="number"
                     className="inp text-xs"
@@ -210,7 +210,7 @@ export default function Bookings({ user }: { user: User }) {
                   />
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1">Duration (periods)</label>
+                  <label className="text-slate-700 font-semibold block mb-1">Duration (periods)</label>
                   <input
                     type="number"
                     className="inp text-xs"
@@ -222,7 +222,7 @@ export default function Bookings({ user }: { user: User }) {
 
               {/* Windows */}
               <div className="space-y-1">
-                <label className="text-slate-400 block">Requested Window(s)</label>
+                <label className="text-slate-700 font-semibold block">Requested Window(s)</label>
                 {draft.windows?.map((w: any, i: number) => (
                   <div key={i} className="grid grid-cols-3 gap-2">
                     <select
@@ -277,7 +277,7 @@ export default function Bookings({ user }: { user: User }) {
 
               {/* Room Types */}
               <div>
-                <label className="text-slate-400 block mb-1">Acceptable Room Types</label>
+                <label className="text-slate-700 font-semibold block mb-1">Acceptable Room Types</label>
                 <div className="flex flex-wrap gap-1">
                   {ROOM_TYPES.map((t) => (
                     <button
@@ -287,7 +287,7 @@ export default function Bookings({ user }: { user: User }) {
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
                         draft.room_types?.includes(t)
                           ? "bg-indigo-600 text-white"
-                          : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                          : "bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-300 font-medium"
                       }`}
                     >
                       {t}
@@ -298,7 +298,7 @@ export default function Bookings({ user }: { user: User }) {
 
               {/* Needs */}
               <div>
-                <label className="text-slate-400 block mb-1">Equipment / Accessibility Needs</label>
+                <label className="text-slate-700 font-semibold block mb-1">Equipment / Accessibility Needs</label>
                 <div className="flex flex-wrap gap-1">
                   {NEEDS.map((t) => (
                     <button
@@ -308,7 +308,7 @@ export default function Bookings({ user }: { user: User }) {
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
                         draft.needs?.includes(t)
                           ? "bg-indigo-600 text-white"
-                          : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                          : "bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-300 font-medium"
                       }`}
                     >
                       {t}
@@ -317,8 +317,8 @@ export default function Bookings({ user }: { user: User }) {
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
-                Institutional Role Cap: Category is capped at <strong className="text-indigo-300">{draft.requested_category}</strong> based on your role privileges.
+              <div className="p-2.5 rounded-xl bg-stone-100 border border-stone-200 text-[11px] text-slate-700 font-medium">
+                Institutional Role Cap: Category is capped at <strong className="text-indigo-700 font-bold">{draft.requested_category}</strong> based on your role privileges.
               </div>
             </div>
 
@@ -344,11 +344,11 @@ export default function Bookings({ user }: { user: User }) {
       <div className="space-y-4">
         <div className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-white flex items-center gap-2">
-              <Compass className="w-4 h-4 text-indigo-400" />
+            <h2 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+              <Compass className="w-4 h-4 text-indigo-700" />
               Booking Requests & Status Tracker
             </h2>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-slate-700 font-mono font-semibold">
               {list?.user_bookings?.length || 0} Records
             </span>
           </div>
@@ -363,38 +363,38 @@ export default function Bookings({ user }: { user: User }) {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-indigo-300">
+                      <span className="font-mono text-xs font-bold text-indigo-700">
                         {b.id}
                       </span>
-                      <strong className="text-white text-xs sm:text-sm">
+                      <strong className="text-stone-900 text-xs sm:text-sm font-bold">
                         {b.request.title}
                       </strong>
                     </div>
                     <span
                       className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                        statusColor[b.status] ?? "bg-slate-800 text-slate-300"
+                        statusColor[b.status] ?? "bg-slate-100 text-slate-700 border border-slate-300 font-semibold"
                       }`}
                     >
                       {b.status}
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-700 font-medium leading-relaxed">
                     {rec?.reason || "Pending review by Dean's Office / Coordinator"}
                   </p>
 
                   {rec?.room_id && (
-                    <div className="text-[11px] text-indigo-300 font-mono flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5" />
+                    <div className="text-[11px] text-indigo-700 font-mono font-semibold flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-indigo-700" />
                       Assigned Room: {rec.room_id} ({rec.day} P{rec.start_period}–P{rec.end_period})
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px] text-slate-400">
+                  <div className="flex items-center justify-between pt-1 border-t border-stone-200 text-[10px] text-slate-600 font-medium">
                     <span>Submitted: {b.created || "Recently"}</span>
                     {b.status === "pending" && (
                       <button
-                        className="text-rose-400 hover:text-rose-300 underline font-medium"
+                        className="text-rose-700 hover:text-rose-800 underline font-semibold"
                         onClick={async () => {
                           if (confirm(`Cancel booking request ${b.id}?`)) {
                             await api(`/bookings/${b.id}/cancel`, "POST");
@@ -411,7 +411,7 @@ export default function Bookings({ user }: { user: User }) {
             })}
 
             {!list?.user_bookings?.length && (
-              <div className="card text-center py-10 text-slate-400 text-xs">
+              <div className="card text-center py-10 text-slate-700 text-xs font-medium">
                 No active booking requests found. Enter a venue request on the left to begin.
               </div>
             )}
