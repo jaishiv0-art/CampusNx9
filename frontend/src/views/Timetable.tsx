@@ -178,7 +178,17 @@ export default function Timetable({ user }: { user: User }) {
       fetchTimetable();
       api("/conflicts").then(setConf).catch(() => {});
     } catch (error: any) {
-      setGenError(error.message || "Automated generation failed. Please review solver constraints.");
+      let errMsg = error.message || "Automated generation failed. Please review solver constraints.";
+      try {
+        const parsed = typeof errMsg === "string" && (errMsg.startsWith("{") || errMsg.includes('{"message"')) ? JSON.parse(errMsg) : null;
+        if (parsed) {
+          errMsg = parsed.message || errMsg;
+          if (parsed.reasons && Array.isArray(parsed.reasons) && parsed.reasons.length > 0) {
+            errMsg += ": " + parsed.reasons.join(". ");
+          }
+        }
+      } catch {}
+      setGenError(errMsg);
     } finally {
       setGenLoading(false);
     }

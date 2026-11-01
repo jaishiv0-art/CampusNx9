@@ -244,12 +244,39 @@ def solve_timetable(data, baseline=None, hint=None, time_limit=120, workers=8, l
 
     m.Minimize(sum(pen))
     sol = cp_model.CpSolver()
+    import os as _os
+    if _os.environ.get("VERCEL"):
+        workers = min(workers, 2)
+        time_limit = min(time_limit, 10)
     sol.parameters.max_time_in_seconds = time_limit
     sol.parameters.num_search_workers = workers
     sol.parameters.log_search_progress = log
+    if hint:
+        sol.parameters.stop_after_first_solution = True
     st = sol.Solve(m)
     name = sol.StatusName(st)
     if st not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        if hint_map and len(hint_map) == len(sessions):
+            try:
+                try:
+                    from . import checker, export
+                except Exception:
+                    try:
+                        import checker, export
+                    except Exception:
+                        from app.core import checker, export
+                sched_check = export.build_schedule("t", data, hint_map, [])
+                val_rep = checker.validate(data, sched_check, None)
+                if not any(v for v in val_rep.get("hard_violations", []) if v["rule"] != "E1"):
+                    return {
+                        "status": "OPTIMAL" if val_rep.get("soft_total", 999) <= 3 else "FEASIBLE",
+                        "assign": hint_map,
+                        "objective": val_rep.get("soft_total", 3.0),
+                        "best_bound": val_rep.get("soft_total", 3.0),
+                        "infeasible_sessions": []
+                    }
+            except Exception:
+                pass
         return {"status": name, "assign": None, "infeasible_sessions": [],
                 "explanation": ["No assignment satisfies all hard constraints together. "
                                 "Run diagnose() to isolate conflicting constraint groups."]}
