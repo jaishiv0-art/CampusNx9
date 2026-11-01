@@ -124,14 +124,8 @@ def current_user(authorization: str = Header(default="")):
                     sb_user = res.user
                     uid = sb_user.id
 
-                    # Detect Google OAuth authentication
-                    is_google = (
-                        getattr(sb_user, "app_metadata", {}).get("provider") == "google"
-                        or "google" in getattr(sb_user, "app_metadata", {}).get("providers", [])
-                    )
-
-                    # Enforce institutional email verification check (Google OAuth is pre-verified)
-                    if not is_google and not sb_user.email_confirmed_at and not getattr(sb_user, "confirmed_at", None):
+                    # Enforce institutional email verification check
+                    if not sb_user.email_confirmed_at and not getattr(sb_user, "confirmed_at", None):
                         raise HTTPException(
                             403,
                             "Institutional email address is not verified. Please check your inbox and confirm your email.",
@@ -143,7 +137,7 @@ def current_user(authorization: str = Header(default="")):
                         prof_res = (
                             sb.table("profiles")
                             .select("*")
-                            .or_(f"user_id.eq.{uid},id.eq.{uid},email.eq.{sb_user.email}")
+                            .or_(f"user_id.eq.{uid},id.eq.{uid}")
                             .execute()
                         )
                         if prof_res.data and len(prof_res.data) > 0:
@@ -153,23 +147,17 @@ def current_user(authorization: str = Header(default="")):
 
                     if not prof:
                         meta = getattr(sb_user, "user_metadata", None) or {}
-                        user_email = (sb_user.email or "").strip().lower()
-                        mapped_role, mapped_dept, mapped_fid, mapped_org = map_email_to_role(
-                            user_email, meta.get("role")
-                        )
                         prof = {
-                            "username": meta.get("username") or user_email.split("@")[0] or "user",
+                            "username": meta.get("username") or (sb_user.email or "").split("@")[0] or "user",
                             "full_name": meta.get("full_name") or "",
-                            "role": mapped_role,
-                            "department": meta.get("department") or mapped_dept,
-                            "faculty_id": meta.get("faculty_id") or mapped_fid,
-                            "org": meta.get("org") or mapped_org,
-                            "approval_status": "approved" if is_google else meta.get("approval_status", "pending"),
+                            "role": meta.get("role") or "FACULTY",
+                            "department": meta.get("department"),
+                            "faculty_id": meta.get("faculty_id"),
+                            "org": meta.get("org"),
+                            "approval_status": meta.get("approval_status", "pending"),
                             "active": meta.get("active", True),
                             "email": sb_user.email,
                         }
-                    elif is_google and prof.get("approval_status") == "pending":
-                        prof["approval_status"] = "approved"
 
                     # Enforce approval status check
                     approval_status = prof.get("approval_status", "pending")

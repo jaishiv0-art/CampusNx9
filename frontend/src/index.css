@@ -421,6 +421,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 1px;
+  pointer-events: none;
   background: linear-gradient(135deg, transparent, transparent);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -485,6 +486,7 @@ button:not(.btn-primary):not(.btn-danger):not(.btn-premium):hover:not(:disabled)
   content: '';
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
   opacity: 0;
   transition: opacity 0.3s;
