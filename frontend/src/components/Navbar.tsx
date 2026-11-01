@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
 import { User, RoleType, DEMO_USERS, roleBadgeInfo, setToken, api } from "../api";
+=======
+import React from "react";
+import { User, RoleType, roleBadgeInfo, setToken, api } from "../api";
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
 import {
   Calendar,
   Sparkles,
@@ -10,18 +15,16 @@ import {
   Building2,
   Users,
   Compass,
-  CheckCircle2,
-  ChevronDown
 } from "lucide-react";
 
 interface NavbarProps {
   user: User;
   tab: string;
   setTab: (tab: string) => void;
-  onUserSwitch: (user: User) => void;
   onLogout: () => void;
 }
 
+<<<<<<< HEAD
 export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
@@ -35,6 +38,9 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+=======
+export default function Navbar({ user, tab, setTab, onLogout }: NavbarProps) {
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
 
   const has = (k: string) => user.permissions.includes("*") || user.permissions.includes(k);
 
@@ -51,23 +57,6 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
     { id: "assistant", label: "AI Scheduler NLP", icon: Sparkles }
   ].filter(Boolean) as { id: string; label: string; icon: React.ComponentType<{ className?: string }> }[];
 
-  const switchRole = async (demo: typeof DEMO_USERS[0]) => {
-    setSwitching(true);
-    try {
-      const res = await api("/auth/login", "POST", {
-        username: demo.username,
-        password: demo.password
-      });
-      setToken(res.token);
-      const me = await api<User>("/me");
-      onUserSwitch(me);
-      setDropdownOpen(false);
-    } catch (e: any) {
-      alert("Role switch failed: " + e.message);
-    } finally {
-      setSwitching(false);
-    }
-  };
 
   const badge = roleBadgeInfo[user.role as RoleType] || {
     label: user.role,
@@ -149,6 +138,7 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
             })}
           </nav>
 
+<<<<<<< HEAD
           {/* User Profile & Quick Role Switcher */}
           <div
             className="flex items-center gap-2 sm:gap-3"
@@ -205,16 +195,36 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
                   </div>
                 </div>
               )}
+=======
+          {/* User Profile & Active Session Indicator (Role Locked) */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 border-[#7B1123]/70 bg-[#7B1123]/25 hover:bg-[#7B1123] text-white text-xs font-bold transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-black/30 cursor-default group"
+              title={`Active Session: ${user.username} (${badge.label}) - Role Locked`}
+            >
+              <Users className="w-3.5 h-3.5 text-amber-300 group-hover:text-amber-200 transition-colors" />
+              <span className="max-w-[120px] truncate font-black text-white">{user.username}</span>
+              <span className="hidden lg:inline-block text-stone-200 group-hover:text-white font-semibold">({badge.label})</span>
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
             </div>
 
-            {/* Sign Out Button */}
+            {/* Secure Sign Out Button */}
             <button
               onClick={onLogout}
+<<<<<<< HEAD
               className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-300 border border-transparent hover:border-rose-500/20 hover:shadow-lg hover:shadow-rose-500/5"
               title="Sign Out"
               aria-label="Sign Out"
             >
               <LogOut className="w-4 h-4 transition-transform duration-300 hover:scale-110" />
+=======
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-200 hover:text-white bg-rose-950/40 hover:bg-rose-900 border border-rose-800/60 hover:border-rose-600 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
+              title="Sign Out"
+              aria-label="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Sign Out</span>
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
             </button>
           </div>
         </div>

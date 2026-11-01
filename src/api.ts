@@ -153,10 +153,10 @@ export const DEMO_USERS = [
 ];
 
 export const statusColor: Record<string, string> = {
-  approved: "bg-emerald-500/15 text-emerald-800 border border-emerald-500/40 font-semibold",
-  pending: "bg-amber-500/15 text-amber-800 border border-amber-500/40 font-semibold",
-  rejected: "bg-rose-500/15 text-rose-800 border border-rose-500/40 font-semibold",
-  alternative_offered: "bg-sky-500/15 text-sky-800 border border-sky-500/40 font-semibold",
+  approved: "bg-emerald-100 text-emerald-950 border-2 border-emerald-400 font-black",
+  pending: "bg-amber-100 text-amber-950 border-2 border-amber-400 font-black",
+  rejected: "bg-rose-100 text-rose-950 border-2 border-rose-400 font-black",
+  alternative_offered: "bg-sky-100 text-sky-950 border-2 border-sky-400 font-black",
   cancelled: "bg-slate-200 text-slate-700 border border-slate-300 font-semibold",
   conflict: "bg-red-500/15 text-red-800 border border-red-500/40 font-semibold"
 };
@@ -164,26 +164,26 @@ export const statusColor: Record<string, string> = {
 export const roleBadgeInfo: Record<RoleType, { label: string; bg: string; border: string; text: string }> = {
   ADMIN: {
     label: "Dean's Office (Admin)",
-    bg: "bg-amber-500/15",
-    border: "border-amber-500/40",
-    text: "text-amber-800 font-semibold"
+    bg: "bg-[#7B1123]/10",
+    border: "border-2 border-[#7B1123]/30",
+    text: "text-[#7B1123] font-black"
   },
   DEPARTMENT_COORDINATOR: {
     label: "Department Coordinator",
-    bg: "bg-blue-500/15",
-    border: "border-blue-500/40",
-    text: "text-blue-800 font-semibold"
+    bg: "bg-[#7B1123]/10",
+    border: "border-2 border-[#7B1123]/30",
+    text: "text-[#7B1123] font-black"
   },
   FACULTY: {
     label: "Faculty Member",
-    bg: "bg-purple-500/15",
-    border: "border-purple-500/40",
-    text: "text-purple-800 font-semibold"
+    bg: "bg-[#7B1123]/10",
+    border: "border-2 border-[#7B1123]/30",
+    text: "text-[#7B1123] font-black"
   },
   CLUB_REPRESENTATIVE: {
     label: "Club Representative",
-    bg: "bg-emerald-500/15",
-    border: "border-emerald-500/40",
-    text: "text-emerald-800 font-semibold"
+    bg: "bg-[#7B1123]/10",
+    border: "border-2 border-[#7B1123]/30",
+    text: "text-[#7B1123] font-black"
   }
 };

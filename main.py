@@ -145,6 +145,7 @@ USER_ALIASES = {
 class Login(BaseModel):
     username: str
     password: str
+    role: Optional[str] = None
 
 class RegisterIn(BaseModel):
     username: str
@@ -335,7 +336,20 @@ def login(b: Login):
     if not authenticated or not r:
         raise HTTPException(401, "Bad credentials: Check email/username or password. For demo accounts use admin / admin123")
 
+<<<<<<< HEAD
     u = dict(r[0])
+=======
+    u = r[0]
+    # Enforce strict 1-to-1 role binding if role was selected on the login page
+    if b.role:
+        expected_role = b.role.strip().upper()
+        if u["role"].upper() != expected_role:
+            raise HTTPException(
+                403,
+                f"Role Binding Invariant Enforced: Account '{u['username']}' is strictly bound to role '{u['role']}', not '{b.role}'. Access denied."
+            )
+
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
     store.audit(u["username"], "login")
     return {
         "token": auth.make_token(u),
@@ -762,7 +776,13 @@ def decide(bid: str, b: Decide, u=Depends(current_user)):
     rows = store.q("SELECT * FROM bookings WHERE id=?", (bid,))
     if not rows: raise HTTPException(404, "No such booking")
     row = rows[0]
-    if row["owner"] == u["username"]: raise HTTPException(403, "Nobody can approve or reject their own request")
+    req = json.loads(row["request"]) if isinstance(row["request"], str) else row["request"]
+    if (
+        row["owner"] == u["username"]
+        or (req.get("requester") and req.get("requester").lower() == u["username"].lower())
+        or (u.get("faculty_id") and req.get("faculty_id") == u["faculty_id"])
+    ):
+        raise HTTPException(403, "Nobody can approve or reject their own request")
     if row["status"] != "pending": raise HTTPException(409, f"Booking is already {row['status']}")
     req = json.loads(row["request"]); rec = recommend(req)
     if not allowed(u, "*"):
@@ -857,7 +877,7 @@ def approve(pid: int, u=Depends(need("timetable.approve"))):
     if not rows: raise HTTPException(404, "No such proposal")
     p = rows[0]
     if p["status"] != "pending": raise HTTPException(409, f"Proposal is {p['status']}")
-    if p["created_by"] == u["username"] and p["kind"] != "disruption":
+    if p["created_by"] == u["username"]:
         raise HTTPException(403, "Nobody can approve their own request")
     payload, res = json.loads(p["payload"]), json.loads(p["result"])
     d = get_data()
@@ -874,6 +894,10 @@ def approve(pid: int, u=Depends(need("timetable.approve"))):
 
 @app.post("/proposals/{pid}/reject")
 def reject(pid: int, note: str = "", u=Depends(need("timetable.approve"))):
+    rows = store.q("SELECT * FROM proposals WHERE id=?", (pid,))
+    if not rows: raise HTTPException(404, "No such proposal")
+    if rows[0]["created_by"] == u["username"]:
+        raise HTTPException(403, "Nobody can approve or reject their own request")
     store.x("UPDATE proposals SET status='rejected', decided_by=? WHERE id=? AND status='pending'", (u["username"], pid))
     store.audit(u["username"], "proposal.reject", {"id": pid, "note": note}); return {"status": "rejected"}
 

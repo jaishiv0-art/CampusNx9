@@ -106,19 +106,19 @@ export default function Bookings({ user }: { user: User }) {
       <div className="space-y-4">
         <div className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+            <h2 className="text-sm font-black text-stone-950 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-700" />
               AI Natural Language Venue Request (English / Hinglish)
             </h2>
             <span className="text-[10px] text-slate-700 font-mono font-semibold">Spectra Week 7</span>
           </div>
 
-          <p className="text-xs text-slate-700 font-medium leading-relaxed">
+          <p className="text-xs text-stone-900 font-bold leading-relaxed">
             Enter your booking needs in plain language. Our deterministic parser extracts the title, window, capacity, needs, and role-capped category before final confirmation.
           </p>
 
           <textarea
-            className="inp h-24 text-xs font-sans text-stone-900 placeholder:text-stone-500"
+            className="inp h-24 text-xs font-sans text-stone-950 placeholder:text-stone-600 font-semibold"
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="e.g. Spectra ke liye Friday ko 6 baje se auditorium chahiye, around 200 students..."
@@ -126,14 +126,14 @@ export default function Bookings({ user }: { user: User }) {
 
           {/* Quick Clickable Sample Prompts */}
           <div className="space-y-1.5 pt-1">
-            <p className="text-[11px] font-semibold text-slate-700">Quick test requests:</p>
+            <p className="text-xs font-black text-stone-900">Quick test requests:</p>
             <div className="flex flex-wrap gap-1.5">
               {SAMPLE_PROMPTS.map((p, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => setText(p)}
-                  className="text-[11px] text-left text-stone-800 hover:text-stone-950 px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 border border-[#D8C7B5] transition-all truncate max-w-full font-medium"
+                  className="text-[11px] text-left text-stone-950 hover:text-black px-2.5 py-1.5 rounded-lg bg-stone-200 hover:bg-stone-300 border-2 border-stone-300 hover:border-stone-500 transition-all truncate max-w-full font-bold shadow-2xs"
                 >
                   "{p.slice(0, 48)}..."
                 </button>
@@ -157,7 +157,7 @@ export default function Bookings({ user }: { user: User }) {
         {draft && (
           <div className="glass-card rounded-2xl p-5 border border-indigo-500/40 space-y-3 bg-indigo-950/20">
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+              <h3 className="text-sm font-black text-stone-950 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 Review & Confirm Booking Specifications
               </h3>
@@ -344,7 +344,7 @@ export default function Bookings({ user }: { user: User }) {
       <div className="space-y-4">
         <div className="glass-panel rounded-2xl p-5 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+            <h2 className="text-sm font-black text-stone-950 flex items-center gap-2">
               <Compass className="w-4 h-4 text-indigo-700" />
               Booking Requests & Status Tracker
             </h2>
@@ -363,10 +363,10 @@ export default function Bookings({ user }: { user: User }) {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-indigo-700">
+                      <span className="font-mono text-xs font-black text-[#7B1123]">
                         {b.id}
                       </span>
-                      <strong className="text-stone-900 text-xs sm:text-sm font-bold">
+                      <strong className="text-stone-950 text-xs sm:text-sm font-black">
                         {b.request.title}
                       </strong>
                     </div>
@@ -379,22 +379,22 @@ export default function Bookings({ user }: { user: User }) {
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                  <p className="text-xs text-stone-900 font-bold leading-relaxed">
                     {rec?.reason || "Pending review by Dean's Office / Coordinator"}
                   </p>
 
                   {rec?.room_id && (
-                    <div className="text-[11px] text-indigo-700 font-mono font-semibold flex items-center gap-1.5">
+                    <div className="text-xs text-[#7B1123] font-mono font-black flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-indigo-700" />
                       Assigned Room: {rec.room_id} ({rec.day} P{rec.start_period}–P{rec.end_period})
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-1 border-t border-stone-200 text-[10px] text-slate-600 font-medium">
+                  <div className="flex items-center justify-between pt-1 border-t border-stone-200 text-xs text-stone-700 font-bold">
                     <span>Submitted: {b.created || "Recently"}</span>
                     {b.status === "pending" && (
                       <button
-                        className="text-rose-700 hover:text-rose-800 underline font-semibold"
+                        className="text-rose-800 hover:text-rose-950 underline font-black"
                         onClick={async () => {
                           if (confirm(`Cancel booking request ${b.id}?`)) {
                             await api(`/bookings/${b.id}/cancel`, "POST");

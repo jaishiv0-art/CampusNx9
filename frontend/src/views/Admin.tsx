@@ -57,13 +57,13 @@ export default function Admin() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Settings className="w-4 h-4 text-indigo-400" />
-            <h2 className="text-base font-bold text-stone-900">Dean's Office Control Center & Solvers</h2>
+            <h2 className="text-base font-black text-stone-950">Dean's Office Control Center & Solvers</h2>
           </div>
-          <span className="text-xs text-slate-600 font-mono font-semibold">Master Administrator</span>
+          <span className="text-xs text-stone-800 font-mono font-bold">Master Administrator</span>
         </div>
 
         <div className="flex flex-wrap gap-2.5">
-          <label className="btn-secondary text-xs py-2 cursor-pointer">
+          <label className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 cursor-pointer">
             <Upload className="w-3.5 h-3.5" />
             Import Dataset JSON
             <input
@@ -91,7 +91,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("e", "/admin/exams/generate")}
           >
@@ -100,7 +100,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("b", "/admin/bookings/decide-dataset")}
           >
@@ -109,7 +109,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("v", "/admin/validate", "GET")}
           >
@@ -118,7 +118,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("d", "/disruptions/sample")}
           >
@@ -127,7 +127,7 @@ export default function Admin() {
           </button>
 
           <button
-            className="btn-secondary text-xs py-2"
+            className="btn-secondary text-xs py-2 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200 text-stone-950 font-bold border-2 border-stone-300 hover:bg-stone-200"
             disabled={!!busy}
             onClick={() => run("x", "/admin/export")}
           >
@@ -137,28 +137,31 @@ export default function Admin() {
         </div>
 
         {out && (
-          <div className="mt-4 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
+          <div className="mt-4 p-4 rounded-2xl bg-[#FFFBF7] border-2 border-stone-300 shadow-sm space-y-3">
             {out.error ? (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
-                <span><strong>Execution Error:</strong> {out.error}</span>
+              <div className="p-3.5 rounded-xl bg-rose-100 border-2 border-rose-400 text-rose-950 text-xs flex items-start gap-2.5 font-bold">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-700 mt-0.5" />
+                <div>
+                  <span className="font-black text-rose-950">Execution Error: </span>
+                  <span className="font-semibold text-rose-900">{typeof out.error === "string" ? out.error : JSON.stringify(out.error)}</span>
+                </div>
               </div>
             ) : out.export_path || out.sessions ? (
               <div className="space-y-3">
                 {/* Generation Success Banner */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-emerald-100 border-2 border-emerald-400">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold shrink-0">
                       ✓
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                      <h4 className="text-sm font-black text-stone-950 flex items-center gap-1.5">
                         <span>100% Clash-Free Academic Timetable Generated</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
+                        <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-200 text-emerald-950 font-mono font-black border border-emerald-400">
                           {out.status || "FEASIBLE"}
                         </span>
                       </h4>
-                      <p className="text-[11px] text-slate-600 mt-0.5">
+                      <p className="text-xs text-stone-900 font-bold mt-0.5">
                         Deterministic CP-SAT solver executed with zero hard constraint violations.
                       </p>
                     </div>
@@ -167,7 +170,7 @@ export default function Admin() {
                   <a
                     href="/export/schedule.json"
                     download="schedule.json"
-                    className="btn-secondary text-xs py-1.5 px-3 self-start sm:self-auto flex items-center gap-1.5 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
+                    className="btn-secondary text-xs py-1.5 px-3 self-start sm:self-auto flex items-center gap-1.5 text-emerald-950 bg-white border-2 border-emerald-500 hover:bg-emerald-200 font-black shadow-xs"
                   >
                     <FileDown className="w-3.5 h-3.5" />
                     Download schedule.json
@@ -338,7 +341,7 @@ export default function Admin() {
             <History className="w-4 h-4 text-indigo-400" />
             Institutional Audit History Log
           </h3>
-          <span className="text-xs text-slate-600 font-mono font-semibold">{audit.length} Events Logged</span>
+          <span className="text-xs text-stone-800 font-mono font-bold">{audit.length} Events Logged</span>
         </div>
 
         <div className="max-h-56 overflow-y-auto space-y-1.5 text-xs font-mono">

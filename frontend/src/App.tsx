@@ -15,6 +15,21 @@ import Exams from "./views/Exams";
 import Assistant from "./views/Assistant";
 import { useCursorGlow } from "./hooks/useAnimations";
 
+const getDefaultTabForRole = (role?: string) => {
+  switch (role) {
+    case "ADMIN":
+      return "admin";
+    case "DEPARTMENT_COORDINATOR":
+      return "timetable";
+    case "FACULTY":
+      return "timetable";
+    case "CLUB_REPRESENTATIVE":
+      return "bookings";
+    default:
+      return "timetable";
+  }
+};
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [tab, setTab] = useState("timetable");
@@ -26,7 +41,11 @@ export default function App() {
     api<User>("/me")
       .then((u) => {
         setUser(u);
+<<<<<<< HEAD
         setShowHomepage(false); // Already authenticated, skip homepage
+=======
+        setTab(getDefaultTabForRole(u.role));
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
       })
       .catch(() => {
         setToken("");
@@ -37,11 +56,23 @@ export default function App() {
       });
   }, []);
 
-  const handleLogout = () => {
-    supabase.auth.signOut().catch(() => {});
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn("[Auth] Supabase signout notice", e);
+    }
     setToken("");
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
     setUser(null);
+<<<<<<< HEAD
     setShowHomepage(true); // Show homepage again after logout
+=======
+    setTab("timetable");
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
   };
 
   if (loading) {
@@ -86,6 +117,7 @@ export default function App() {
   }
 
   if (!user) {
+<<<<<<< HEAD
     // Show the animated homepage first, then login when CTA clicked
     if (showHomepage) {
       return (
@@ -105,6 +137,15 @@ export default function App() {
         <div ref={glowRef} className="cursor-glow" />
         <div ref={dotRef} className="cursor-dot" />
       </>
+=======
+    return (
+      <Login
+        onSuccess={(u) => {
+          setUser(u);
+          setTab(getDefaultTabForRole(u.role));
+        }}
+      />
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
     );
   }
 
@@ -142,7 +183,6 @@ export default function App() {
           user={user}
           tab={tab}
           setTab={setTab}
-          onUserSwitch={(u) => setUser(u)}
           onLogout={handleLogout}
         />
       </div>
@@ -160,6 +200,7 @@ export default function App() {
           {tab === "assistant" && <Assistant />}
         </div>
       </main>
+<<<<<<< HEAD
 
       {/* =========================================================================
           PREMIUM FOOTER
@@ -202,6 +243,8 @@ export default function App() {
           </div>
         </div>
       </footer>
+=======
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
     </div>
   );
 }

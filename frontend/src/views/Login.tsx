@@ -224,8 +224,62 @@ export default function Login({ onSuccess }: LoginProps) {
           org: orgValue
         });
 
+<<<<<<< HEAD
         if (regRes.token) {
           setToken(regRes.token);
+=======
+          if (signUpErr) {
+            throw new Error(signUpErr.message);
+          }
+
+          if (signUpData?.user) {
+            try {
+              await supabase.from("profiles").upsert({
+                user_id: signUpData.user.id,
+                username: cleanUsername,
+                full_name: fullName.trim(),
+                email: cleanEmail,
+                role: selectedRole,
+                department: deptValue,
+                org: orgValue,
+                approval_status: "pending",
+                active: true
+              });
+            } catch (pErr: any) {
+              console.warn("[Profiles Upsert Notice]", pErr?.message);
+            }
+          }
+
+          await api("/admin/users", "POST", {
+            username: cleanUsername,
+            password: cleanPass,
+            role: selectedRole,
+            department: deptValue,
+            org: orgValue,
+            active: false
+          }).catch(() => { });
+
+          setInfoMsg(
+            `Registration submitted for ${cleanUsername}! A verification email has been sent to ${cleanEmail}. Please verify your email address. Once verified, your account will await Dean's Office approval before activation.`
+          );
+          setMode("signin");
+          return;
+        } else {
+          await api("/admin/users", "POST", {
+            username: cleanUsername,
+            password: cleanPass,
+            role: selectedRole,
+            department: deptValue,
+            org: orgValue,
+            active: true
+          });
+
+          setInfoMsg(
+            `Local user ${cleanUsername} registered successfully in the local store. You can now sign in.`
+          );
+          setMode("signin");
+          return;
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
         }
 
         // Also sync with Supabase if configured in environment
@@ -271,12 +325,29 @@ export default function Login({ onSuccess }: LoginProps) {
       // -------------------------------------------------------------
       const loginIdentifier = cleanUsername || cleanEmail;
 
+<<<<<<< HEAD
       // 1. Direct login via backend API (works for both demo personas & newly registered accounts)
       try {
         const res = await api<{ token: string; user?: User }>("/auth/login", "POST", {
           username: loginIdentifier,
           password: cleanPass
         });
+=======
+      const isLikelyDemo =
+        demoUsers.includes(cleanUsername) ||
+        demoUsers.includes(cleanEmail.split("@")[0]) ||
+        (cleanEmail.endsWith("@cit.ac.in") && ["admin", "coord", "fac", "club"].some(p => cleanUsername.startsWith(p)));
+
+      // 1. For institutional demo personas, prioritize instant local backend login
+      if (isLikelyDemo) {
+        try {
+          const loginIdentifier = cleanUsername || cleanEmail;
+          const res = await api("/auth/login", "POST", {
+            username: loginIdentifier,
+            password: cleanPass,
+            role: selectedRole
+          });
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
 
         if (res.token) {
           setToken(res.token);
@@ -293,6 +364,7 @@ export default function Login({ onSuccess }: LoginProps) {
             ? cleanUsername
             : `${cleanUsername}@cit.ac.in`;
 
+<<<<<<< HEAD
           const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
             email: targetEmail,
             password: cleanPass
@@ -300,13 +372,107 @@ export default function Login({ onSuccess }: LoginProps) {
 
           if (!authErr && authData?.session) {
             setToken(authData.session.access_token);
+=======
+      // 2. Supabase Auth flow for registered institutional users
+      if (isSupabaseConfigured()) {
+        const targetEmail = cleanEmail.includes("@")
+          ? cleanEmail
+          : cleanUsername.includes("@")
+            ? cleanUsername
+            : `${cleanUsername}@cit.ac.in`;
+
+        const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
+          email: targetEmail,
+          password: cleanPass
+        });
+
+        if (authErr) {
+          // If Supabase sign-in failed, attempt direct API login as secondary fallback
+          try {
+            const res = await api("/auth/login", "POST", {
+              username: cleanUsername || cleanEmail,
+              password: cleanPass,
+              role: selectedRole
+            });
+            setToken(res.token);
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
             const me = await api<User>("/me");
             if (onSuccess) onSuccess(me);
             return;
           }
         }
+<<<<<<< HEAD
         throw loginErr;
       }
+=======
+
+        if (!authData.user || !authData.session) {
+          throw new Error("Supabase authentication failed. No active session returned.");
+        }
+
+        // Enforce email verification check
+        if (!authData.user.email_confirmed_at && !(authData.user as any).confirmed_at) {
+          await supabase.auth.signOut();
+          throw new Error(
+            `Institutional email not verified. Please check your inbox at ${authData.user.email} and confirm your email before logging in.`
+          );
+        }
+
+        // Fetch profile
+        const profile = await fetchUserProfile(authData.user.id);
+        if (!profile) {
+          await supabase.auth.signOut();
+          throw new Error(
+            "Institutional profile record not found. Please contact Dean's Office for profile initialization."
+          );
+        }
+
+        if (profile.approval_status === "rejected") {
+          await supabase.auth.signOut();
+          throw new Error(
+            "Account Registration Rejected: Your institutional account request was declined by the Dean's Office."
+          );
+        }
+        if (profile.approval_status !== "approved") {
+          await supabase.auth.signOut();
+          throw new Error(
+            `Account Pending Approval: Your email is verified, but your account is currently "${profile.approval_status}". Dean's Office approval is required.`
+          );
+        }
+
+        if (profile.active === false) {
+          await supabase.auth.signOut();
+          throw new Error(
+            "Account Deactivated: This institutional account has been deactivated by the Dean's Office."
+          );
+        }
+
+        // Strict 1-to-1 Role Binding: user cannot select a different role than their authorized profile
+        if (profile.role && profile.role.toUpperCase() !== selectedRole.toUpperCase()) {
+          await supabase.auth.signOut();
+          throw new Error(
+            `Role Mismatch: Your institutional account is authorized strictly as "${profile.role}", not as "${selectedRole}". Access denied.`
+          );
+        }
+
+        setToken(authData.session.access_token);
+        const me = await api<User>("/me");
+        if (onSuccess) onSuccess(me);
+        return;
+      }
+
+      // 3. Local direct login fallback
+      const loginIdentifier = cleanUsername || cleanEmail;
+      const res = await api("/auth/login", "POST", {
+        username: loginIdentifier,
+        password: cleanPass,
+        role: selectedRole
+      });
+
+      setToken(res.token);
+      const me = await api<User>("/me");
+      if (onSuccess) onSuccess(me);
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
     } catch (error: any) {
       setErr(error.message || "Authentication failed. Please verify credentials.");
     } finally {
@@ -407,15 +573,23 @@ export default function Login({ onSuccess }: LoginProps) {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 relative z-10">
         <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          
+
           {/* =========================================================================
               LEFT COLUMN: AUTHENTICATION & ROLE ACCESS FORM
               ========================================================================= */}
+<<<<<<< HEAD
           <div className="lg:col-span-5 flex flex-col space-y-5" style={{ animation: 'fade-right 0.7s cubic-bezier(0.19,1,0.22,1) 0.1s both' }}>
             
             {/* Primary Login Card */}
             <div className="card-premium bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm">
               
+=======
+          <div className="lg:col-span-5 flex flex-col space-y-5">
+
+            {/* Primary Login Card */}
+            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm">
+
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
               {/* Header inside Card */}
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -431,12 +605,24 @@ export default function Login({ onSuccess }: LoginProps) {
                 <div className="flex items-center bg-[#FAF5ED] p-1 rounded-xl border border-[#E8DEC8]">
                   <button
                     type="button"
-                    onClick={() => handleSwitchMode("register")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      mode === "register"
+<<<<<<< HEAD
+=======
+                    onClick={() => handleSwitchMode("signin")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${mode === "signin"
                         ? "bg-[#7B1123] text-white shadow-sm"
                         : "text-stone-600 hover:text-stone-900"
-                    }`}
+                      }`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
+                    onClick={() => handleSwitchMode("register")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${mode === "register"
+                        ? "bg-[#7B1123] text-white shadow-sm"
+                        : "text-stone-600 hover:text-stone-900"
+                      }`}
                   >
                     Register
                   </button>
@@ -489,6 +675,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 </div>
               )}
 
+<<<<<<< HEAD
               {/* Verified Account Action Banner */}
               {registeredUser && (
                 <div className="mb-4 p-4 rounded-xl bg-emerald-50/95 border border-emerald-300 text-emerald-950 text-xs space-y-3 shadow-xs">
@@ -534,22 +721,25 @@ export default function Login({ onSuccess }: LoginProps) {
                   <strong>Institutional Governance Rule:</strong> Nobody can approve their own booking or change request; cross-role verification strictly enforced by backend.
                 </p>
               </div>
+=======
+
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
 
               {/* Form Content */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                
+
                 {/* 1. ROLE SELECTOR */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-stone-700 flex items-center gap-1.5 uppercase tracking-wide">
+                    <label className="text-xs font-black text-stone-900 flex items-center gap-1.5 uppercase tracking-wide">
                       <Shield className="w-3.5 h-3.5 text-[#7B1123]" />
                       Select Institutional Role
                     </label>
                     {mode === "signin" && (
-                      <span className="text-[10px] text-stone-500 font-medium">Auto-fills credentials</span>
+                      <span className="text-xs text-stone-700 font-bold">Auto-fills credentials</span>
                     )}
                   </div>
-                  
+
                   <div className="relative">
                     <select
                       value={selectedRole}
@@ -577,9 +767,9 @@ export default function Login({ onSuccess }: LoginProps) {
                     <div className="text-xs">
                       <div className="font-bold text-stone-900 flex items-center gap-2">
                         <span>{currentRoleInfo.title}</span>
-                        <span className="font-normal text-stone-500 font-mono text-[11px]">({currentRoleInfo.subtitle})</span>
+                        <span className="font-bold text-stone-700 font-mono text-xs">({currentRoleInfo.subtitle})</span>
                       </div>
-                      <p className="text-stone-600 text-[11px] mt-0.5 leading-snug">
+                      <p className="text-stone-900 text-xs mt-0.5 leading-snug font-semibold">
                         {currentRoleInfo.desc}
                       </p>
                     </div>
@@ -589,7 +779,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 {/* 2. REGISTRATION-ONLY FIELDS */}
                 {mode === "register" && (
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-black text-stone-900 mb-1">
                       Full Legal Name
                     </label>
                     <div className="relative">
@@ -599,7 +789,7 @@ export default function Login({ onSuccess }: LoginProps) {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="Dr. Rajesh Sharma"
-                        className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
+                        className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
                       />
                       <UserIcon className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                     </div>
@@ -608,7 +798,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
                 {/* Email Address */}
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-black text-stone-900 mb-1">
                     Institutional Email Address (@cit.ac.in)
                   </label>
                   <div className="relative">
@@ -633,7 +823,7 @@ export default function Login({ onSuccess }: LoginProps) {
                         }
                       }}
                       placeholder="user@cit.ac.in"
-                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
                     />
                     <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                   </div>
@@ -641,7 +831,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
                 {/* Username */}
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-black text-stone-900 mb-1">
                     Username / Handle
                   </label>
                   <div className="relative">
@@ -651,7 +841,7 @@ export default function Login({ onSuccess }: LoginProps) {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="e.g. admin, coord_cse, fac_f01"
-                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
                     />
                     <UserIcon className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                   </div>
@@ -660,7 +850,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 {/* Contextual Academic Department / Org Fields */}
                 {mode === "register" && (selectedRole === "DEPARTMENT_COORDINATOR" || selectedRole === "FACULTY") && (
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-black text-stone-900 mb-1">
                       Academic Department
                     </label>
                     <select
@@ -682,7 +872,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
                 {mode === "register" && selectedRole === "CLUB_REPRESENTATIVE" && (
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-black text-stone-900 mb-1">
                       Student Society / Club Name
                     </label>
                     <input
@@ -690,7 +880,7 @@ export default function Login({ onSuccess }: LoginProps) {
                       value={clubName}
                       onChange={(e) => setClubName(e.target.value)}
                       placeholder="e.g. Dramatics Society, Robotics Club"
-                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
                     />
                   </div>
                 )}
@@ -698,7 +888,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 {/* Password with Eye Toggle and Auto-Fill Helper */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-stone-700">
+                    <label className="block text-xs font-black text-stone-900">
                       Password
                     </label>
                     {mode === "signin" && (
@@ -723,7 +913,7 @@ export default function Login({ onSuccess }: LoginProps) {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter password"
-                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 pr-10 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 pr-10 text-xs sm:text-sm text-stone-900 placeholder-stone-500 font-medium focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
                     />
                     <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                     <button
@@ -739,7 +929,7 @@ export default function Login({ onSuccess }: LoginProps) {
                   {/* Forgot Password Link in Signin Mode */}
                   {mode === "signin" && (
                     <div className="flex items-center justify-between text-xs mt-1.5">
-                      <span className="text-stone-500">Need account assistance?</span>
+                      <span className="text-stone-800 font-bold">Need account assistance?</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -793,17 +983,21 @@ export default function Login({ onSuccess }: LoginProps) {
                       key={r.id}
                       type="button"
                       onClick={() => handleQuickDemoLogin(r)}
+<<<<<<< HEAD
                       style={{ animation: `fade-up-subtle 0.4s cubic-bezier(0.19,1,0.22,1) ${0.1 + ROLES.indexOf(r) * 0.06}s both` }}
                       className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer hover:translate-y-[-1px] hover:shadow-md ${
                         selectedRole === r.id
+=======
+                      className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer ${selectedRole === r.id
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
                           ? "bg-[#7B1123]/10 border-[#7B1123] text-[#7B1123] shadow-xs"
-                          : "border-[#E8DEC8] hover:border-[#7B1123]/40 bg-[#FAF7F2] hover:bg-white text-stone-800"
-                      }`}
+                          : "border-2 border-stone-300 hover:border-[#7B1123] bg-stone-50 hover:bg-stone-200 text-stone-950 hover:text-black font-bold shadow-2xs"
+                        }`}
                     >
                       <r.icon className="w-4 h-4 shrink-0 text-[#7B1123]" />
                       <div className="truncate">
                         <div className="font-bold truncate">{r.title}</div>
-                        <div className="text-[10px] text-stone-500 font-mono truncate">{r.demoUser}</div>
+                        <div className="text-xs text-stone-700 font-mono font-bold truncate group-hover:text-stone-950">{r.demoUser}</div>
                       </div>
                     </button>
                   ))}
@@ -817,7 +1011,7 @@ export default function Login({ onSuccess }: LoginProps) {
               <button
                 type="button"
                 onClick={() => setShowMobileDetails(!showMobileDetails)}
-                className="w-full py-2.5 px-4 bg-white/90 border border-[#E8DCBE] rounded-xl text-xs font-bold text-stone-700 flex items-center justify-between shadow-xs"
+                className="w-full py-2.5 px-4 bg-white/90 border border-[#E8DCBE] rounded-xl text-xs font-black text-stone-900 flex items-center justify-between shadow-xs"
               >
                 <span className="flex items-center gap-2 text-[#7B1123]">
                   <Target className="w-4 h-4" />
@@ -836,8 +1030,13 @@ export default function Login({ onSuccess }: LoginProps) {
           {/* =========================================================================
               RIGHT COLUMN: CIT BANNER PICTURE & DETAILED SYSTEM OVERVIEW
               ========================================================================= */}
+<<<<<<< HEAD
           <div className={`lg:col-span-7 flex flex-col space-y-6 ${showMobileDetails ? "block" : "hidden lg:flex"}`} style={{ animation: 'fade-left 0.7s cubic-bezier(0.19,1,0.22,1) 0.2s both' }}>
             
+=======
+          <div className={`lg:col-span-7 flex flex-col space-y-6 ${showMobileDetails ? "block" : "hidden lg:flex"}`}>
+
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
             {/* 1. CIT LOGO & CAMPUS BANNER PICTURE */}
             <div className="card-premium bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-3 sm:p-4 overflow-hidden backdrop-blur-sm">
               <div className="img-reveal relative rounded-xl overflow-hidden border border-[#EADCC9] shadow-inner bg-[#FAF7F2]">
@@ -877,47 +1076,63 @@ export default function Login({ onSuccess }: LoginProps) {
                 </div>
               </div>
 
-              <p className="text-stone-700 text-sm leading-relaxed">
+              <p className="text-stone-950 text-sm leading-relaxed font-semibold">
                 Hand-made campus timetables are notoriously fragile: faculty clashes, venue double-bookings, lab collisions during lunch, and mid-semester disruptions routinely break academic schedules. <strong>CampusNx9</strong> replaces manual guesswork with a mathematically verified, rule-enforced operating system designed to achieve:
               </p>
 
               <div className="grid sm:grid-cols-2 gap-3 pt-1">
+<<<<<<< HEAD
                 <ScrollReveal delay={0.1} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
+=======
+                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Zero Hard Violations
                   </div>
-                  <p className="text-xs text-stone-600 leading-snug">
+                  <p className="text-xs text-stone-900 leading-snug font-bold">
                     Strict mathematical guarantees: 0 professor double-bookings, 0 room overlaps, and strictly enforced lab continuity.
                   </p>
                 </ScrollReveal>
 
+<<<<<<< HEAD
                 <ScrollReveal delay={0.18} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
+=======
+                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Conflict-Free Elective Baskets
                   </div>
-                  <p className="text-xs text-stone-600 leading-snug">
+                  <p className="text-xs text-stone-900 leading-snug font-bold">
                     Synchronized elective slots (Basket 1, Basket 2) run in parallel across departments without any inter-batch conflicts.
                   </p>
                 </ScrollReveal>
 
+<<<<<<< HEAD
                 <ScrollReveal delay={0.26} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
+=======
+                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Lunch Break Protected
                   </div>
-                  <p className="text-xs text-stone-600 leading-snug">
+                  <p className="text-xs text-stone-900 leading-snug font-bold">
                     Period 5 to 6 transition (13:00 – 14:00) is institutional lunch hour. Zero academic sessions or mandatory events are ever scheduled.
                   </p>
                 </ScrollReveal>
 
+<<<<<<< HEAD
                 <ScrollReveal delay={0.34} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
+=======
+                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
+>>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Smart Minimal Rescheduling
                   </div>
-                  <p className="text-xs text-stone-600 leading-snug">
+                  <p className="text-xs text-stone-900 leading-snug font-bold">
                     When disruptions happen (faculty emergency or weather closures), solver finds replacement slots with minimal timetable ripple.
                   </p>
                 </ScrollReveal>
@@ -1051,7 +1266,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
             <form onSubmit={handleResetPassword} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                <label className="block text-xs font-black text-stone-900 mb-1">
                   Institutional Email Address
                 </label>
                 <input
