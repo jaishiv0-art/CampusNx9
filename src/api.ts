@@ -164,26 +164,26 @@ export const statusColor: Record<string, string> = {
 export const roleBadgeInfo: Record<RoleType, { label: string; bg: string; border: string; text: string }> = {
   ADMIN: {
     label: "Dean's Office (Admin)",
-    bg: "bg-amber-500/15",
-    border: "border-amber-500/40",
-    text: "text-amber-800 font-semibold"
+    bg: "bg-[#7B1123]/10",
+    border: "border-2 border-[#7B1123]/30",
+    text: "text-[#7B1123] font-black"
   },
   DEPARTMENT_COORDINATOR: {
     label: "Department Coordinator",
-    bg: "bg-blue-500/15",
-    border: "border-blue-500/40",
-    text: "text-blue-800 font-semibold"
+    bg: "bg-[#7B1123]/10",
+    border: "border-2 border-[#7B1123]/30",
+    text: "text-[#7B1123] font-black"
   },
   FACULTY: {
     label: "Faculty Member",
-    bg: "bg-purple-500/15",
-    border: "border-purple-500/40",
-    text: "text-purple-800 font-semibold"
+    bg: "bg-[#7B1123]/10",
+    border: "border-2 border-[#7B1123]/30",
+    text: "text-[#7B1123] font-black"
   },
   CLUB_REPRESENTATIVE: {
     label: "Club Representative",
-    bg: "bg-emerald-500/15",
-    border: "border-emerald-500/40",
-    text: "text-emerald-800 font-semibold"
+    bg: "bg-[#7B1123]/10",
+    border: "border-2 border-[#7B1123]/30",
+    text: "text-[#7B1123] font-black"
   }
 };
