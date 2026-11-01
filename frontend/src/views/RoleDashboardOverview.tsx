@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { User, roleBadgeInfo, RoleType } from "../api";
 import {
   Shield,
@@ -9,10 +9,21 @@ import {
   Clock,
   Layers
 } from "lucide-react";
+import { useStaggerReveal, useCountUp } from "../hooks/useAnimations";
 
 interface RoleDashboardOverviewProps {
   user: User;
   onNavigateTab: (tab: string) => void;
+}
+
+/* Animated counter component */
+function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
+  const { count, ref } = useCountUp(value, { duration: 1600 });
+  return (
+    <span ref={ref}>
+      {count}{suffix}
+    </span>
+  );
 }
 
 export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashboardOverviewProps) {
@@ -23,76 +34,117 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
     text: "text-[#7B1123]"
   };
 
+  const staggerRef = useStaggerReveal();
+
   return (
     <div className="mb-6 space-y-4">
       {/* Welcome Banner */}
-      <div className="bg-white/95 rounded-2xl p-4 sm:p-5 border border-[#E8DCBE] shadow-xs relative overflow-hidden backdrop-blur-md">
-        <div className="absolute right-0 top-0 w-80 h-full bg-gradient-to-l from-amber-500/10 to-transparent pointer-events-none" />
+      <div
+        className="bg-white/95 rounded-2xl p-4 sm:p-5 border border-[#E8DCBE] shadow-xs relative overflow-hidden backdrop-blur-md"
+        style={{ animation: "fade-up 0.6s cubic-bezier(0.19,1,0.22,1) 0.1s both" }}
+      >
+        {/* Animated gradient accent */}
+        <div
+          className="absolute right-0 top-0 w-80 h-full pointer-events-none"
+          style={{
+            background: "linear-gradient(to left, rgba(123,17,35,0.06) 0%, transparent 60%)",
+            animation: "glow-breathe 6s ease-in-out infinite",
+          }}
+        />
+        {/* Decorative dot pattern */}
+        <div className="absolute right-4 top-4 w-20 h-20 dot-pattern opacity-30 rounded-lg" />
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div>
             <div className="flex items-center gap-2.5 mb-1.5">
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${badge.bg} ${badge.border} ${badge.text}`}>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${badge.bg} ${badge.border} ${badge.text}`}
+                style={{ animation: "scale-in-bounce 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.3s both" }}
+              >
                 {badge.label}
               </span>
               <span className="text-xs text-stone-500 font-mono">
                 {user.department ? `Dept: ${user.department}` : user.org || "CIT Administration"}
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
-              Welcome back, {user.username}
+            <h2
+              className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight"
+              style={{ animation: "fade-right 0.7s cubic-bezier(0.19,1,0.22,1) 0.15s both" }}
+            >
+              Welcome back, <span className="text-[#7B1123]">{user.username}</span>
             </h2>
-            <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
+            <p
+              className="text-xs sm:text-sm text-stone-500 mt-0.5"
+              style={{ animation: "fade-up-subtle 0.6s cubic-bezier(0.19,1,0.22,1) 0.3s both" }}
+            >
               Active Session · Connected to Chilika Institute of Technology Scheduling Engine
             </p>
           </div>
 
-
+          {/* Animated status indicator */}
+          <div
+            className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full"
+            style={{ animation: "scale-in 0.5s cubic-bezier(0.19,1,0.22,1) 0.5s both" }}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500" style={{ animation: "glow-pulse 2s ease-in-out infinite" }} />
+            <span className="text-[11px] font-semibold text-emerald-800">System Online</span>
+          </div>
         </div>
       </div>
 
+      {/* Decorative separator with glow */}
+      <div className="section-separator-glow" />
+
       {/* Role-Specific Metric Cards */}
       {user.role === "ADMIN" && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md hover:border-[#7B1123]/30 transition-all">
+        <div ref={staggerRef} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="card-metric reveal stagger-1 hover:border-[#7B1123]/30 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Teaching Sessions</span>
-              <Layers className="w-4 h-4 text-[#7B1123]" />
+              <Layers className="w-4 h-4 text-[#7B1123] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
             </div>
-            <div className="text-2xl font-black text-stone-900">189 / 189</div>
+            <div className="text-2xl font-black text-stone-900">
+              <AnimatedNumber value={189} /> / 189
+            </div>
             <div className="text-[11px] text-emerald-700 mt-1 flex items-center gap-1 font-semibold">
               <CheckCircle2 className="w-3 h-3" /> 100% Conflict-Free
             </div>
           </div>
 
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md hover:border-[#7B1123]/30 transition-all">
+          <div className="card-metric reveal stagger-2 hover:border-purple-300/50 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Midsem Exams (W8)</span>
-              <GraduationCap className="w-4 h-4 text-purple-700" />
+              <GraduationCap className="w-4 h-4 text-purple-700 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
             </div>
-            <div className="text-2xl font-black text-stone-900">41 Scheduled</div>
+            <div className="text-2xl font-black text-stone-900">
+              <AnimatedNumber value={41} /> Scheduled
+            </div>
             <div className="text-[11px] text-stone-500 mt-1">
               Halved Capacity Enforced
             </div>
           </div>
 
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md hover:border-[#7B1123]/30 transition-all">
+          <div className="card-metric reveal stagger-3 hover:border-amber-300/50 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Spectra Fest Bookings</span>
-              <Sparkles className="w-4 h-4 text-amber-700" />
+              <Sparkles className="w-4 h-4 text-amber-700 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
             </div>
-            <div className="text-2xl font-black text-stone-900">25 Evaluated</div>
+            <div className="text-2xl font-black text-stone-900">
+              <AnimatedNumber value={25} /> Evaluated
+            </div>
             <div className="text-[11px] text-[#7B1123] mt-1 font-semibold">
               Score: 67.0 | 0 Inversions
             </div>
           </div>
 
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md hover:border-[#7B1123]/30 transition-all">
+          <div className="card-metric reveal stagger-4 hover:border-emerald-300/50 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Disruption Stability</span>
-              <Shield className="w-4 h-4 text-emerald-700" />
+              <Shield className="w-4 h-4 text-emerald-700 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
             </div>
-            <div className="text-2xl font-black text-stone-900">7 Reassigned</div>
+            <div className="text-2xl font-black text-stone-900">
+              <AnimatedNumber value={7} /> Reassigned
+            </div>
             <div className="text-[11px] text-stone-500 mt-1">
               1 Time Shift, 6 Room-Only
             </div>
@@ -101,11 +153,11 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
       )}
 
       {user.role === "DEPARTMENT_COORDINATOR" && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md">
+        <div ref={staggerRef} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="card-metric reveal stagger-1 hover:border-blue-300/50 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Department Context</span>
-              <BookOpen className="w-4 h-4 text-blue-700" />
+              <BookOpen className="w-4 h-4 text-blue-700 transition-transform duration-300 group-hover:scale-110" />
             </div>
             <div className="text-xl font-black text-stone-900">{user.department || "Engineering"} Department</div>
             <div className="text-[11px] text-stone-500 mt-1">
@@ -113,10 +165,10 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
             </div>
           </div>
 
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md">
+          <div className="card-metric reveal stagger-2 hover:border-[#7B1123]/30 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Department Permissions</span>
-              <Shield className="w-4 h-4 text-[#7B1123]" />
+              <Shield className="w-4 h-4 text-[#7B1123] transition-transform duration-300 group-hover:scale-110" />
             </div>
             <div className="text-base font-bold text-stone-800">Session Rescheduling & Lab Approvals</div>
             <div className="text-[11px] text-amber-800 mt-1 font-semibold">
@@ -124,7 +176,7 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
             </div>
           </div>
 
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md flex flex-col justify-between">
+          <div className="card-metric reveal stagger-3 hover:border-[#7B1123]/30 flex flex-col justify-between group">
             <div>
               <div className="text-stone-500 text-xs mb-1">Quick Action</div>
               <div className="text-sm font-bold text-stone-800">View Department Timetable</div>
@@ -140,11 +192,11 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
       )}
 
       {user.role === "FACULTY" && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md">
+        <div ref={staggerRef} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="card-metric reveal stagger-1 hover:border-purple-300/50 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Faculty ID & Department</span>
-              <GraduationCap className="w-4 h-4 text-purple-700" />
+              <GraduationCap className="w-4 h-4 text-purple-700 transition-transform duration-300 group-hover:scale-110" />
             </div>
             <div className="text-xl font-black text-stone-900">{user.faculty_id || "F01"} · {user.department || "Faculty"}</div>
             <div className="text-[11px] text-stone-500 mt-1">
@@ -152,10 +204,10 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
             </div>
           </div>
 
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md">
+          <div className="card-metric reveal stagger-2 hover:border-amber-300/50 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Daily Workload Limit</span>
-              <Clock className="w-4 h-4 text-amber-700" />
+              <Clock className="w-4 h-4 text-amber-700 transition-transform duration-300 group-hover:scale-110" />
             </div>
             <div className="text-xl font-black text-stone-900">≤ 4 Hours / Day</div>
             <div className="text-[11px] text-emerald-700 mt-1 font-semibold">
@@ -163,7 +215,7 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
             </div>
           </div>
 
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md flex flex-col justify-between">
+          <div className="card-metric reveal stagger-3 hover:border-[#7B1123]/30 flex flex-col justify-between group">
             <div>
               <div className="text-stone-500 text-xs mb-1">AI Rescheduling Assistant</div>
               <div className="text-xs text-stone-600">Reschedule sessions in plain English or Hinglish</div>
@@ -179,11 +231,11 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
       )}
 
       {user.role === "CLUB_REPRESENTATIVE" && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md">
+        <div ref={staggerRef} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="card-metric reveal stagger-1 hover:border-emerald-300/50 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Student Organization</span>
-              <Sparkles className="w-4 h-4 text-emerald-700" />
+              <Sparkles className="w-4 h-4 text-emerald-700 transition-transform duration-300 group-hover:scale-110" />
             </div>
             <div className="text-xl font-black text-stone-900">{user.org || "Student Club"}</div>
             <div className="text-[11px] text-stone-500 mt-1">
@@ -191,10 +243,10 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
             </div>
           </div>
 
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md">
+          <div className="card-metric reveal stagger-2 hover:border-amber-300/50 group">
             <div className="flex items-center justify-between text-stone-500 text-xs mb-1">
               <span>Spectra Week 7 Policy</span>
-              <Shield className="w-4 h-4 text-amber-700" />
+              <Shield className="w-4 h-4 text-amber-700 transition-transform duration-300 group-hover:scale-110" />
             </div>
             <div className="text-sm font-bold text-stone-800">6-Tier Institutional Priority</div>
             <div className="text-[11px] text-stone-500 mt-1">
@@ -202,7 +254,7 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
             </div>
           </div>
 
-          <div className="bg-white/95 rounded-2xl p-4 border border-[#E8DCBE] shadow-xs backdrop-blur-md flex flex-col justify-between">
+          <div className="card-metric reveal stagger-3 hover:border-[#7B1123]/30 flex flex-col justify-between group">
             <div>
               <div className="text-stone-500 text-xs mb-1">Venue Booking</div>
               <div className="text-xs text-stone-600">Submit new venue request with NLP parser</div>

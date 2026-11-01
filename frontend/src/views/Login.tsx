@@ -1,4 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import AmbientBackground from "../components/AmbientBackground";
+import ScrollReveal from "../components/ScrollReveal";
+import { DecorativeLineV } from "../components/DecorativeLines";
 import { api, setToken, User } from "../api";
 import {
   supabase,
@@ -466,9 +469,11 @@ export default function Login({ onSuccess }: LoginProps) {
   const RoleIcon = currentRoleInfo.icon;
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col font-sans selection:bg-[#7B1123] selection:text-white">
+    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col font-sans selection:bg-[#7B1123] selection:text-white relative overflow-hidden">
+      {/* Premium Ambient Background */}
+      <AmbientBackground variant="hero" showGrid />
       {/* Top Brand Notification Header */}
-      <header className="bg-[#FAF5ED] border-b border-[#E8DEC8] px-4 py-2 sm:px-8 shadow-xs">
+      <header className="bg-[#FAF5ED]/90 backdrop-blur-md border-b border-[#E8DEC8] px-4 py-2 sm:px-8 shadow-xs relative z-10" style={{ animation: 'fade-down 0.5s cubic-bezier(0.19,1,0.22,1) both' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
             <img
@@ -497,16 +502,16 @@ export default function Login({ onSuccess }: LoginProps) {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 relative z-10">
         <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           
           {/* =========================================================================
               LEFT COLUMN: AUTHENTICATION & ROLE ACCESS FORM
               ========================================================================= */}
-          <div className="lg:col-span-5 flex flex-col space-y-5">
+          <div className="lg:col-span-5 flex flex-col space-y-5" style={{ animation: 'fade-right 0.7s cubic-bezier(0.19,1,0.22,1) 0.1s both' }}>
             
             {/* Primary Login Card */}
-            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm">
+            <div className="card-premium bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm">
               
               {/* Header inside Card */}
               <div className="flex items-center justify-between mb-5">
@@ -814,7 +819,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 px-4 rounded-xl text-sm font-bold bg-[#7B1123] hover:bg-[#640E1C] active:bg-[#520A16] text-white shadow-lg shadow-amber-950/15 hover:shadow-amber-950/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2 cursor-pointer"
+                  className="btn-premium w-full py-3 px-4 rounded-xl text-sm font-bold bg-[#7B1123] text-white shadow-lg shadow-amber-950/15 hover:shadow-amber-950/25 disabled:opacity-50 mt-2 cursor-pointer"
                 >
                   {loading ? (
                     "Authenticating CIT User..."
@@ -825,7 +830,7 @@ export default function Login({ onSuccess }: LoginProps) {
                           ? `Sign In as ${currentRoleInfo.title}`
                           : "Complete Institutional Registration"}
                       </span>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4 btn-arrow" />
                     </>
                   )}
                 </button>
@@ -847,7 +852,8 @@ export default function Login({ onSuccess }: LoginProps) {
                       key={r.id}
                       type="button"
                       onClick={() => handleQuickDemoLogin(r)}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer ${
+                      style={{ animation: `fade-up-subtle 0.4s cubic-bezier(0.19,1,0.22,1) ${0.1 + ROLES.indexOf(r) * 0.06}s both` }}
+                      className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer hover:translate-y-[-1px] hover:shadow-md ${
                         selectedRole === r.id
                           ? "bg-[#7B1123]/10 border-[#7B1123] text-[#7B1123] shadow-xs"
                           : "border-[#E8DEC8] hover:border-[#7B1123]/40 bg-[#FAF7F2] hover:bg-white text-stone-800"
@@ -889,17 +895,17 @@ export default function Login({ onSuccess }: LoginProps) {
           {/* =========================================================================
               RIGHT COLUMN: CIT BANNER PICTURE & DETAILED SYSTEM OVERVIEW
               ========================================================================= */}
-          <div className={`lg:col-span-7 flex flex-col space-y-6 ${showMobileDetails ? "block" : "hidden lg:flex"}`}>
+          <div className={`lg:col-span-7 flex flex-col space-y-6 ${showMobileDetails ? "block" : "hidden lg:flex"}`} style={{ animation: 'fade-left 0.7s cubic-bezier(0.19,1,0.22,1) 0.2s both' }}>
             
             {/* 1. CIT LOGO & CAMPUS BANNER PICTURE */}
-            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-3 sm:p-4 overflow-hidden backdrop-blur-sm">
-              <div className="relative rounded-xl overflow-hidden border border-[#EADCC9] shadow-inner bg-[#FAF7F2]">
+            <div className="card-premium bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-3 sm:p-4 overflow-hidden backdrop-blur-sm">
+              <div className="img-reveal relative rounded-xl overflow-hidden border border-[#EADCC9] shadow-inner bg-[#FAF7F2]">
                 <img
                   src="/cit_banner.png"
                   alt="Chilika Institute of Technology (CIT) Official Banner"
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-auto object-cover max-h-[360px] hover:scale-[1.01] transition-transform duration-500"
+                  className="w-full h-auto object-cover max-h-[360px] transition-transform duration-700"
                 />
                 {/* Floating Institutional Badge */}
                 <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#E0D2C0] shadow-md flex items-center gap-2 text-xs font-bold text-[#7B1123]">
@@ -909,8 +915,13 @@ export default function Login({ onSuccess }: LoginProps) {
               </div>
             </div>
 
+            {/* Decorative connecting line between sections */}
+            <div className="flex justify-center -my-3 relative z-10">
+              <DecorativeLineV height={40} />
+            </div>
+
             {/* 2. OBJECTIVE OF THE PLATFORM */}
-            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm space-y-4">
+            <div className="card-premium bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm space-y-4" style={{ animation: 'fade-up 0.6s cubic-bezier(0.19,1,0.22,1) 0.3s both' }}>
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#7B1123]/10 border border-[#7B1123]/20 flex items-center justify-center text-[#7B1123]">
                   <Target className="w-4 h-4" />
@@ -930,50 +941,55 @@ export default function Login({ onSuccess }: LoginProps) {
               </p>
 
               <div className="grid sm:grid-cols-2 gap-3 pt-1">
-                <div className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1">
+                <ScrollReveal delay={0.1} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Zero Hard Violations
                   </div>
                   <p className="text-xs text-stone-600 leading-snug">
                     Strict mathematical guarantees: 0 professor double-bookings, 0 room overlaps, and strictly enforced lab continuity.
                   </p>
-                </div>
+                </ScrollReveal>
 
-                <div className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1">
+                <ScrollReveal delay={0.18} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Conflict-Free Elective Baskets
                   </div>
                   <p className="text-xs text-stone-600 leading-snug">
                     Synchronized elective slots (Basket 1, Basket 2) run in parallel across departments without any inter-batch conflicts.
                   </p>
-                </div>
+                </ScrollReveal>
 
-                <div className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1">
+                <ScrollReveal delay={0.26} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Lunch Break Protected
                   </div>
                   <p className="text-xs text-stone-600 leading-snug">
                     Period 5 to 6 transition (13:00 – 14:00) is institutional lunch hour. Zero academic sessions or mandatory events are ever scheduled.
                   </p>
-                </div>
+                </ScrollReveal>
 
-                <div className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1">
+                <ScrollReveal delay={0.34} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Smart Minimal Rescheduling
                   </div>
                   <p className="text-xs text-stone-600 leading-snug">
                     When disruptions happen (faculty emergency or weather closures), solver finds replacement slots with minimal timetable ripple.
                   </p>
-                </div>
+                </ScrollReveal>
               </div>
             </div>
 
+            {/* Decorative connecting line between sections */}
+            <div className="flex justify-center -my-3 relative z-10">
+              <DecorativeLineV height={40} />
+            </div>
+
             {/* 3. HARD & SOFT CONSTRAINTS BREAKDOWN */}
-            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm space-y-4">
+            <div className="card-premium bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm space-y-4" style={{ animation: 'fade-up 0.6s cubic-bezier(0.19,1,0.22,1) 0.45s both' }}>
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#7B1123]/10 border border-[#7B1123]/20 flex items-center justify-center text-[#7B1123]">
                   <FileCheck className="w-4 h-4" />
@@ -1138,16 +1154,25 @@ export default function Login({ onSuccess }: LoginProps) {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-[#E8DEC8] bg-[#FAF5ED] py-4 px-4 sm:px-8 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-2">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-stone-800">CampusNx9</span>
-            <span>·</span>
-            <span>Chilika Institute of Technology</span>
+      {/* Premium Footer */}
+      <footer className="relative z-10 border-t border-[#E8DEC8] bg-gradient-to-b from-[#FAF5ED]/95 to-[#F5EFE4]/95 backdrop-blur-md py-5 px-4 sm:px-8 mt-auto">
+        {/* Top glow line */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7B1123]/20 to-transparent" />
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg bg-[#7B1123]/10 border border-[#7B1123]/20 flex items-center justify-center">
+              <div className="w-3.5 h-3.5 rounded bg-[#7B1123]" />
+            </div>
+            <div>
+              <span className="font-bold text-stone-800 text-sm">Campus<span className="text-[#7B1123]">Nx9</span></span>
+              <span className="text-stone-400 mx-1.5">·</span>
+              <span>Chilika Institute of Technology</span>
+            </div>
           </div>
-          <div className="text-[11px] text-stone-500">
-            Automated Academic Scheduling & Venue Resource Optimization Engine
+          <div className="text-[11px] text-stone-500 flex items-center gap-2">
+            <span>Automated Academic Scheduling</span>
+            <span className="text-stone-300">·</span>
+            <span className="font-semibold text-[#7B1123]">Zero Violations</span>
           </div>
         </div>
       </footer>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, RoleType, DEMO_USERS, roleBadgeInfo, setToken, api } from "../api";
 import {
   Calendar,
@@ -25,6 +25,16 @@ interface NavbarProps {
 export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Scroll-based navbar background transition
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const has = (k: string) => user.permissions.includes("*") || user.permissions.includes(k);
 
@@ -67,24 +77,29 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl">
+    <header
+      className={`sticky top-0 z-40 border-b transition-all duration-500 ${
+        scrolled
+          ? "bg-slate-950/95 backdrop-blur-2xl border-slate-800/80 shadow-2xl shadow-black/20"
+          : "bg-slate-950/80 backdrop-blur-xl border-slate-800/60 shadow-xl"
+      }`}
+      style={{ animation: "fade-down 0.4s cubic-bezier(0.19,1,0.22,1) both" }}
+    >
       {/* =========================================================================
-          NAVBAR HEADER (Change background opacity, borders, or layout here)
+          NAVBAR HEADER
           ========================================================================= */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
+
           {/* =====================================================================
               1. LOGO ICON & BRANDING
-              - Change 'Building2' or replace the <div> with an <img> tag for custom logo
-              - Change gradient 'from-indigo-500 ... to-violet-700' for different brand colors
               ===================================================================== */}
-          <div className="flex items-center gap-3">
-            <div className="h-10 px-2 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-indigo-500/10 border border-slate-700">
+          <div className="flex items-center gap-3 group">
+            <div className="h-10 px-2 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-indigo-500/10 border border-slate-700 transition-all duration-300 group-hover:shadow-[#7B1123]/20 group-hover:border-[#7B1123]/40">
               <img
                 src="/logo.png"
                 alt="CampusNx9"
-                className="h-8 w-auto object-contain"
+                className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
             </div>
 
@@ -94,7 +109,7 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold tracking-tight text-white text-base sm:text-lg">
-                  Campus<span className="text-indigo-400">Nx9</span>
+                  Campus<span className="text-indigo-400 transition-colors duration-300 group-hover:text-[#E8A0A0]">Nx9</span>
                 </span>
                 <span className="px-1.5 py-0.5 text-[10px] uppercase font-mono font-bold tracking-wider bg-indigo-500/10 text-indigo-300 rounded border border-indigo-500/30">
                   CIT
@@ -108,49 +123,58 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
 
           {/* Navigation Tabs */}
           <nav className="hidden md:flex items-center gap-1">
-            {tabs.map((t) => {
+            {tabs.map((t, i) => {
               const Icon = t.icon;
               const active = tab === t.id;
               return (
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  className={`nav-link flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-300 ${
                     active
                       ? "bg-[#7B1123] text-white border border-[#9b1d33] shadow-sm shadow-black/20"
                       : "text-slate-200 hover:text-white hover:bg-slate-800/80 font-medium"
                   }`}
+                  style={{
+                    animation: `fade-down 0.4s cubic-bezier(0.19,1,0.22,1) ${0.05 + i * 0.05}s both`,
+                  }}
                 >
-                  <Icon className={`w-4 h-4 ${active ? "text-white" : "text-slate-400"}`} />
+                  <Icon className={`w-4 h-4 transition-transform duration-300 ${active ? "text-white" : "text-slate-400"} ${active ? "" : "group-hover:scale-110"}`} />
                   {t.label}
+                  {active && (
+                    <span className="absolute bottom-0 left-[15%] w-[70%] h-0.5 bg-white/40 rounded-full" />
+                  )}
                 </button>
               );
             })}
           </nav>
 
           {/* User Profile & Quick Role Switcher */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div
+            className="flex items-center gap-2 sm:gap-3"
+            style={{ animation: "fade-down 0.4s cubic-bezier(0.19,1,0.22,1) 0.3s both" }}
+          >
             {/* Quick Role Switcher Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${badge.bg} ${badge.border} ${badge.text} hover:brightness-110`}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all duration-300 ${badge.bg} ${badge.border} ${badge.text} hover:brightness-110`}
                 title="Quickly switch between official roles"
               >
                 <Users className="w-3.5 h-3.5" />
                 <span className="max-w-[120px] truncate">{user.username}</span>
                 <span className="hidden lg:inline-block">({badge.label})</span>
-                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                <ChevronDown className={`w-3.5 h-3.5 opacity-70 transition-transform duration-300 ${dropdownOpen ? "rotate-180" : ""}`} />
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 border border-stone-200 ring-1 ring-black/10">
+                <div className="dropdown-enter absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl p-2 z-50 border border-stone-200 ring-1 ring-black/10">
                   <div className="px-3 py-2 border-b border-stone-200">
                     <p className="text-xs font-bold text-stone-900">Switch Active Role</p>
                     <p className="text-[11px] text-stone-600 font-medium">Instantly test the 4 competition user roles</p>
                   </div>
                   <div className="py-1 space-y-1">
-                    {DEMO_USERS.map((demo) => {
+                    {DEMO_USERS.map((demo, i) => {
                       const isCurrent = user.username === demo.username;
                       return (
                         <button
@@ -162,6 +186,9 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
                               ? "bg-[#7B1123]/10 text-[#7B1123] font-bold border border-[#7B1123]/30 shadow-xs"
                               : "text-stone-800 hover:bg-stone-200 hover:text-stone-950 border border-transparent hover:border-stone-400 font-medium"
                           }`}
+                          style={{
+                            animation: `fade-up-subtle 0.3s cubic-bezier(0.19,1,0.22,1) ${0.05 + i * 0.04}s both`,
+                          }}
                         >
                           <div>
                             <div className={`font-bold ${isCurrent ? "text-[#7B1123]" : "text-stone-900 group-hover:text-stone-950"}`}>
@@ -183,11 +210,11 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
             {/* Sign Out Button */}
             <button
               onClick={onLogout}
-              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20"
+              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-300 border border-transparent hover:border-rose-500/20 hover:shadow-lg hover:shadow-rose-500/5"
               title="Sign Out"
               aria-label="Sign Out"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 transition-transform duration-300 hover:scale-110" />
             </button>
           </div>
         </div>
@@ -201,9 +228,9 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-300 ${
                   active
-                    ? "bg-indigo-600/25 text-indigo-300 border border-indigo-500/40"
+                    ? "bg-[#7B1123]/25 text-rose-200 border border-[#7B1123]/40 shadow-sm"
                     : "text-slate-400 hover:text-slate-200"
                 }`}
               >
@@ -214,6 +241,9 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
           })}
         </div>
       </div>
+
+      {/* Bottom glow accent line */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7B1123]/30 to-transparent" />
     </header>
   );
 }
