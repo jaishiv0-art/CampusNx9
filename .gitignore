@@ -33,7 +33,10 @@ dist-ssr/
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
-exports/
+exports/*
+!exports/schedule.json
+!exports/schedule_after.json
+!exports/README.txt
 
 # OS & Editor
 .DS_Store
