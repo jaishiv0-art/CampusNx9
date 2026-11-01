@@ -43,6 +43,50 @@ ROLE_KEY = {
     "CLUB_REPRESENTATIVE": "club",
 }
 
+def map_email_to_role(email: str, preferred_role: str = None) -> tuple[str, str | None, str | None, str | None]:
+    """
+    Strict 1-to-1 deterministic institutional mapping of email / Google account to role.
+    """
+    clean = (email or "").strip().lower()
+    local = clean.split("@")[0] if "@" in clean else clean
+
+    # 1. Dean's Office / Administrator
+    if "admin" in local or "dean" in local or clean == "dean.office@cit.ac.in":
+        return "ADMIN", None, None, "Dean's Office"
+    # 2. Department Coordinator
+    if "coord" in local or "coordinator" in local or clean.startswith("coord."):
+        dept = "CSE"
+        for d in ["ece", "me", "ce", "ee"]:
+            if d in local:
+                dept = d.upper()
+                break
+        return "DEPARTMENT_COORDINATOR", dept, None, f"{dept} Operations"
+    # 3. Club Representative
+    if "club" in local or "society" in local or "dramatics" in local or "robotics" in local or "music" in local:
+        org = "Dramatics Society"
+        if "robotics" in local:
+            org = "Robotics Club"
+        elif "music" in local:
+            org = "Music Club"
+        return "CLUB_REPRESENTATIVE", None, None, org
+    # 4. Faculty Member
+    if "fac" in local or "faculty" in local or "ananya" in local or "prof" in local:
+        return "FACULTY", "CSE", "F01", "Dr. Ananya Mishra"
+
+    # Preferred role from login-page dropdown selection
+    if preferred_role and preferred_role in PERMS:
+        if preferred_role == "ADMIN":
+            return "ADMIN", None, None, "Dean's Office"
+        elif preferred_role == "DEPARTMENT_COORDINATOR":
+            return "DEPARTMENT_COORDINATOR", "CSE", None, "CSE Operations"
+        elif preferred_role == "CLUB_REPRESENTATIVE":
+            return "CLUB_REPRESENTATIVE", None, None, "Student Club"
+        elif preferred_role == "FACULTY":
+            return "FACULTY", "CSE", "F01", "Faculty Member"
+
+    return "FACULTY", "CSE", "F01", "Faculty Member"
+
+
 
 def make_token(u):
     return jwt.encode(
@@ -80,8 +124,14 @@ def current_user(authorization: str = Header(default="")):
                     sb_user = res.user
                     uid = sb_user.id
 
-                    # Enforce institutional email verification check
-                    if not sb_user.email_confirmed_at and not getattr(sb_user, "confirmed_at", None):
+                    # Detect Google OAuth authentication
+                    is_google = (
+                        getattr(sb_user, "app_metadata", {}).get("provider") == "google"
+                        or "google" in getattr(sb_user, "app_metadata", {}).get("providers", [])
+                    )
+
+                    # Enforce institutional email verification check (Google OAuth is pre-verified)
+                    if not is_google and not sb_user.email_confirmed_at and not getattr(sb_user, "confirmed_at", None):
                         raise HTTPException(
                             403,
                             "Institutional email address is not verified. Please check your inbox and confirm your email.",
@@ -93,7 +143,7 @@ def current_user(authorization: str = Header(default="")):
                         prof_res = (
                             sb.table("profiles")
                             .select("*")
-                            .or_(f"user_id.eq.{uid},id.eq.{uid}")
+                            .or_(f"user_id.eq.{uid},id.eq.{uid},email.eq.{sb_user.email}")
                             .execute()
                         )
                         if prof_res.data and len(prof_res.data) > 0:
@@ -103,17 +153,23 @@ def current_user(authorization: str = Header(default="")):
 
                     if not prof:
                         meta = getattr(sb_user, "user_metadata", None) or {}
+                        user_email = (sb_user.email or "").strip().lower()
+                        mapped_role, mapped_dept, mapped_fid, mapped_org = map_email_to_role(
+                            user_email, meta.get("role")
+                        )
                         prof = {
-                            "username": meta.get("username") or (sb_user.email or "").split("@")[0] or "user",
+                            "username": meta.get("username") or user_email.split("@")[0] or "user",
                             "full_name": meta.get("full_name") or "",
-                            "role": meta.get("role") or "FACULTY",
-                            "department": meta.get("department"),
-                            "faculty_id": meta.get("faculty_id"),
-                            "org": meta.get("org"),
-                            "approval_status": meta.get("approval_status", "pending"),
+                            "role": mapped_role,
+                            "department": meta.get("department") or mapped_dept,
+                            "faculty_id": meta.get("faculty_id") or mapped_fid,
+                            "org": meta.get("org") or mapped_org,
+                            "approval_status": "approved" if is_google else meta.get("approval_status", "pending"),
                             "active": meta.get("active", True),
                             "email": sb_user.email,
                         }
+                    elif is_google and prof.get("approval_status") == "pending":
+                        prof["approval_status"] = "approved"
 
                     # Enforce approval status check
                     approval_status = prof.get("approval_status", "pending")

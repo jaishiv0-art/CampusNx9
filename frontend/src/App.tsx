@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api, setToken, User } from "./api";
-import { supabase } from "./supabase";
+import { supabase, isSupabaseConfigured, fetchUserProfile } from "./supabase";
 import Navbar from "./components/Navbar";
 import AmbientBackground from "./components/AmbientBackground";
 import Login from "./views/Login";
@@ -38,19 +38,103 @@ export default function App() {
   const { glowRef, dotRef } = useCursorGlow();
 
   useEffect(() => {
-    api<User>("/me")
-      .then((u) => {
-        setUser(u);
-        setShowHomepage(false); // Already authenticated, skip homepage
-        setTab(getDefaultTabForRole(u.role));
-      })
-      .catch(() => {
-        setToken("");
-        setUser(null);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    let mounted = true;
+
+    const initAuth = async () => {
+      // 1. Process Supabase session (e.g. from Google OAuth redirect or persisted session)
+      if (isSupabaseConfigured()) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            setToken(session.access_token);
+
+            // Handle post-OAuth profile and 1-to-1 role binding
+            const boundRole =
+              localStorage.getItem("cit_auth_bound_role") ||
+              sessionStorage.getItem("cit_auth_bound_role");
+
+            if (session.user) {
+              const meta = session.user.user_metadata || {};
+              const userEmail = session.user.email || "";
+              const userName =
+                meta.username || meta.full_name || userEmail.split("@")[0] || "user";
+
+              try {
+                const existing = await fetchUserProfile(session.user.id);
+                if (!existing && boundRole) {
+                  await supabase.from("profiles").upsert({
+                    user_id: session.user.id,
+                    username: userName,
+                    full_name: meta.full_name || userName,
+                    email: userEmail,
+                    role: boundRole,
+                    department:
+                      boundRole === "DEPARTMENT_COORDINATOR" || boundRole === "FACULTY"
+                        ? "CSE"
+                        : null,
+                    org: boundRole === "CLUB_REPRESENTATIVE" ? "Student Club" : "CIT",
+                    approval_status: "approved",
+                    active: true
+                  });
+                }
+              } catch (pErr) {
+                console.warn("[Profile Init Notice]", pErr);
+              }
+            }
+          }
+        } catch (sbErr) {
+          console.warn("[Supabase getSession Notice]", sbErr);
+        }
+      }
+
+      // 2. Fetch authenticated user from backend /me
+      try {
+        const u = await api<User>("/me");
+        if (mounted) {
+          setUser(u);
+          setShowHomepage(false); // Already authenticated, skip homepage
+          setTab(getDefaultTabForRole(u.role));
+        }
+      } catch {
+        if (mounted) {
+          setToken("");
+          setUser(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initAuth();
+
+    // 3. Listen to Supabase auth state changes (e.g. SIGNED_IN event from Google OAuth)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.access_token) {
+        setToken(session.access_token);
+        try {
+          const u = await api<User>("/me");
+          if (mounted) {
+            setUser(u);
+            setShowHomepage(false);
+            setTab(getDefaultTabForRole(u.role));
+          }
+        } catch (e) {
+          console.warn("[Auth SIGNED_IN Notice]", e);
+        }
+      } else if (event === "SIGNED_OUT") {
+        if (mounted) {
+          setToken("");
+          setUser(null);
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -188,6 +272,7 @@ export default function App() {
           {tab === "assistant" && <Assistant />}
         </div>
       </main>
+
       {/* =========================================================================
           PREMIUM FOOTER
           ========================================================================= */}
