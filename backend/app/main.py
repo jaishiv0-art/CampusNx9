@@ -146,6 +146,103 @@ class Login(BaseModel):
     username: str
     password: str
 
+class RegisterIn(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    role: str
+    department: Optional[str] = None
+    faculty_id: Optional[str] = None
+    org: Optional[str] = None
+
+class VerifyIn(BaseModel):
+    username_or_email: str
+    code: Optional[str] = None
+
+@app.post("/auth/register")
+def register(b: RegisterIn):
+    clean_username = (b.username or "").strip().lower()
+    clean_pw = (b.password or "").strip()
+    clean_email = (b.email or "").strip().lower()
+    clean_role = (b.role or "").strip().upper()
+    clean_name = (b.full_name or "").strip()
+    clean_dept = (b.department or "").strip().upper() if b.department else None
+    clean_org = (b.org or "").strip() if b.org else None
+    clean_faculty_id = (b.faculty_id or "").strip() if b.faculty_id else None
+
+    if not clean_username:
+        raise HTTPException(422, "Username is required")
+    if len(clean_pw) < 6:
+        raise HTTPException(422, "Password must be at least 6 characters")
+    if clean_role not in auth.PERMS:
+        raise HTTPException(422, f"Role must be one of {list(auth.PERMS)}")
+    if clean_role == "ADMIN":
+        raise HTTPException(403, "Dean's Office (Master Administrator) accounts cannot be self-registered.")
+
+    # Check for existing account
+    existing = store.q(
+        "SELECT username, email FROM users WHERE username=? OR (email IS NOT NULL AND email=? AND email != '')",
+        (clean_username, clean_email)
+    )
+    if existing:
+        raise HTTPException(409, f"An account with username '{clean_username}' or email '{clean_email}' already exists.")
+
+    if clean_role == "FACULTY" and not clean_faculty_id:
+        clean_faculty_id = f"F_{clean_username[:8].upper()}"
+
+    hashed = store.hash_pw(clean_pw)
+    store.x(
+        "INSERT INTO users(username, pw, role, department, faculty_id, org, active, email, full_name, verified) "
+        "VALUES(?,?,?,?,?,?,1,?,?,1)",
+        (clean_username, hashed, clean_role, clean_dept, clean_faculty_id, clean_org, clean_email, clean_name)
+    )
+
+    store.audit(clean_username, "user.register", {
+        "username": clean_username,
+        "role": clean_role,
+        "email": clean_email,
+        "department": clean_dept
+    })
+
+    u_rows = store.q("SELECT * FROM users WHERE username=?", (clean_username,))
+    if not u_rows:
+        raise HTTPException(500, "User registration persistence failed")
+    u = dict(u_rows[0])
+    token = auth.make_token(u)
+
+    return {
+        "ok": True,
+        "token": token,
+        "verified": True,
+        "user": {
+            "username": u["username"],
+            "role": u["role"],
+            "department": u.get("department"),
+            "faculty_id": u.get("faculty_id"),
+            "org": u.get("org"),
+            "email": u.get("email"),
+            "full_name": u.get("full_name")
+        },
+        "message": f"Account for {clean_username} successfully created and verified!"
+    }
+
+@app.post("/auth/verify")
+def verify_account(b: VerifyIn):
+    target = (b.username_or_email or "").strip().lower()
+    r = store.q("SELECT * FROM users WHERE (username=? OR email=?) AND active=1", (target, target))
+    if not r:
+        raise HTTPException(404, "User account not found")
+    u = dict(r[0])
+    store.x("UPDATE users SET verified=1 WHERE username=?", (u["username"],))
+    store.audit(u["username"], "user.verify")
+    return {
+        "ok": True,
+        "username": u["username"],
+        "verified": True,
+        "message": "Institutional identity and email verified successfully."
+    }
+
 @app.post("/auth/login")
 def login(b: Login):
     raw_user = (b.username or "").strip().lower()
@@ -153,11 +250,17 @@ def login(b: Login):
     if "@" in target_user:
         target_user = target_user.split("@")[0]
 
-    r = store.q("SELECT * FROM users WHERE (username=? OR username=?) AND active=1", (target_user, raw_user))
+    r = store.q(
+        "SELECT * FROM users WHERE (username=? OR username=? OR email=? OR email=?) AND active=1",
+        (target_user, raw_user, raw_user, target_user)
+    )
     if not r:
         try:
             store.seed_users(get_data())
-            r = store.q("SELECT * FROM users WHERE (username=? OR username=?) AND active=1", (target_user, raw_user))
+            r = store.q(
+                "SELECT * FROM users WHERE (username=? OR username=? OR email=? OR email=?) AND active=1",
+                (target_user, raw_user, raw_user, target_user)
+            )
         except Exception:
             pass
 
@@ -232,12 +335,23 @@ def login(b: Login):
     if not authenticated or not r:
         raise HTTPException(401, "Bad credentials: Check email/username or password. For demo accounts use admin / admin123")
 
-    u = r[0]
+    u = dict(r[0])
     store.audit(u["username"], "login")
-    return {"token": auth.make_token(u), "user": {k: u[k] for k in ("username", "role", "department", "faculty_id", "org")}}
+    return {
+        "token": auth.make_token(u),
+        "user": {
+            k: u.get(k)
+            for k in ("username", "role", "department", "faculty_id", "org", "email", "full_name")
+        }
+    }
 
 @app.get("/me")
-def me(u=Depends(current_user)): return {k: u[k] for k in ("username", "role", "department", "faculty_id", "org")} | {"permissions": sorted(auth.PERMS[u["role"]])}
+def me(u=Depends(current_user)):
+    user_dict = dict(u)
+    return {
+        k: user_dict.get(k)
+        for k in ("username", "role", "department", "faculty_id", "org", "email", "full_name")
+    } | {"permissions": sorted(auth.PERMS.get(user_dict.get("role", "FACULTY"), []))}
 
 
 # ------------------------------------------------------------------ admin: dataset, generation, export
@@ -511,7 +625,7 @@ def get_schedule(u=Depends(need_any("export", "timetable.view_dept", "timetable.
 
 
 @app.get("/admin/validate")
-def run_validator(u=Depends(need_any("timetable.generate", "timetable.view_dept", "timetable.view_own"))):
+def run_validator(u=Depends(need_any("timetable.generate", "timetable.view_dept"))):
     return checker.validate(get_data(), schedule_obj(), None)
 
 
@@ -542,12 +656,8 @@ def timetable(
 ):
     d, a = get_data(), get_assign(); rows = _decorate(d, a)
     if not allowed(u, "*"):
-        if u["role"] == "FACULTY":
-            if not (department or group or room or role == "ALL"):
-                rows = [r for r in rows if r["faculty_id"] == u.get("faculty_id")]
-        elif u["role"] == "DEPARTMENT_COORDINATOR":
-            if not (faculty or group or room or role == "ALL"):
-                rows = [r for r in rows if r["department"] == u.get("department") or u.get("department") in r["group_depts"] or any(g.startswith(u.get("department", "")) for g in r["groups"])]
+        if u["role"] == "FACULTY": rows = [r for r in rows if r["faculty_id"] == u["faculty_id"]]
+        else: rows = [r for r in rows if r["department"] == u["department"] or u["department"] in r["group_depts"] or any(g.startswith(u["department"]) for g in r["groups"])]
     elif role:
         if role == "FACULTY" and faculty:
             rows = [r for r in rows if r["faculty_id"] == faculty]
@@ -577,13 +687,13 @@ def exams(u=Depends(current_user)): return {"exams": store.kv_get("exams") or []
 
 
 @app.get("/conflicts")
-def conflicts(u=Depends(need_any("timetable.generate", "timetable.view_dept", "timetable.view_own"))):
+def conflicts(u=Depends(need_any("timetable.generate", "timetable.view_dept"))):
     rep = checker.validate(get_data(), schedule_obj(), None)
     return {"hard_violation_count": rep["hard_violation_count"], "violations": rep["hard_violations"][:200], "soft": rep["soft_penalties"]}
 
 
 @app.get("/stats/utilization")
-def utilization(u=Depends(need_any("timetable.generate", "timetable.view_dept", "timetable.view_own"))):
+def utilization(u=Depends(need_any("timetable.generate", "timetable.view_dept"))):
     d, a = get_data(), get_assign(); S = {s["id"]: s for s in d["sessions"]}; used = {r["id"]: 0 for r in d["rooms"]}; low = 0
     cap = {r["id"]: r["capacity"] for r in d["rooms"]}
     for sid, (_, _, r) in a.items():

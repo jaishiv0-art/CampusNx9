@@ -92,16 +92,16 @@ export const ROLES = [
 ];
 
 export default function Login({ onSuccess }: LoginProps) {
-  // Tab: "signin" | "register"
-  const [mode, setMode] = useState<"signin" | "register">("signin");
+  // Tab: "signin" | "register" — defaults to "register" as requested
+  const [mode, setMode] = useState<"signin" | "register">("register");
 
-  // Selected Role
-  const [selectedRole, setSelectedRole] = useState("ADMIN");
+  // Selected Role (default to FACULTY for registration, since ADMIN cannot self-register)
+  const [selectedRole, setSelectedRole] = useState("FACULTY");
 
   // Form Fields
-  const [email, setEmail] = useState("dean.office@cit.ac.in");
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [department, setDepartment] = useState("CSE");
@@ -110,6 +110,7 @@ export default function Login({ onSuccess }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [infoMsg, setInfoMsg] = useState("");
+  const [registeredUser, setRegisteredUser] = useState<User | null>(null);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
 
   // Password Reset Modal State
@@ -141,20 +142,27 @@ export default function Login({ onSuccess }: LoginProps) {
     setMode(newMode);
     setErr("");
     setInfoMsg("");
+    setRegisteredUser(null);
 
     if (newMode === "register") {
       if (selectedRole === "ADMIN") {
         setSelectedRole("FACULTY");
+      }
+      // If fields contain demo username, reset for clean registration input
+      const r = ROLES.find((item) => item.id === selectedRole) || ROLES[0];
+      if (username === r.demoUser || username === "admin") {
         setUsername("");
         setPassword("");
         setEmail("");
       }
     } else {
-      // Re-fill demo info for current role
-      const r = ROLES.find((item) => item.id === selectedRole) || ROLES[0];
-      setUsername(r.demoUser);
-      setPassword(r.demoPass);
-      setEmail(r.defaultEmail);
+      // If fields are empty when switching to signin, fill demo info for quick testing
+      if (!username || !password) {
+        const r = ROLES.find((item) => item.id === selectedRole) || ROLES[0];
+        setUsername(r.demoUser);
+        setPassword(r.demoPass);
+        setEmail(r.defaultEmail);
+      }
     }
   };
 
@@ -183,7 +191,7 @@ export default function Login({ onSuccess }: LoginProps) {
           throw new Error("Full Legal Name is required for institutional registration.");
         }
         if (!cleanEmail || !cleanEmail.includes("@")) {
-          throw new Error("A valid institutional email address is required.");
+          throw new Error("A valid institutional email address is required (e.g. user@cit.ac.in).");
         }
         if (!cleanUsername) {
           throw new Error("Username handle is required.");
@@ -199,211 +207,106 @@ export default function Login({ onSuccess }: LoginProps) {
         const orgValue =
           selectedRole === "CLUB_REPRESENTATIVE" ? clubName.trim() || "Student Club" : "CIT";
 
-        if (isSupabaseConfigured()) {
-          const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-            email: cleanEmail,
-            password: cleanPass,
-            options: {
-              data: {
-                username: cleanUsername,
-                full_name: fullName.trim(),
-                role: selectedRole,
-                department: deptValue,
-                org: orgValue
-              },
-              emailRedirectTo:
-                typeof window !== "undefined" ? `${window.location.origin}/login` : undefined
-            }
-          });
+        // Call backend registration endpoint
+        const regRes = await api<{
+          ok: boolean;
+          token: string;
+          verified: boolean;
+          user: User;
+          message: string;
+        }>("/auth/register", "POST", {
+          username: cleanUsername,
+          password: cleanPass,
+          email: cleanEmail,
+          full_name: fullName.trim(),
+          role: selectedRole,
+          department: deptValue,
+          org: orgValue
+        });
 
-          if (signUpErr) {
-            throw new Error(signUpErr.message);
-          }
-
-          if (signUpData?.user) {
-            try {
-              await supabase.from("profiles").upsert({
-                user_id: signUpData.user.id,
-                username: cleanUsername,
-                full_name: fullName.trim(),
-                email: cleanEmail,
-                role: selectedRole,
-                department: deptValue,
-                org: orgValue,
-                approval_status: "pending",
-                active: true
-              });
-            } catch (pErr: any) {
-              console.warn("[Profiles Upsert Notice]", pErr?.message);
-            }
-          }
-
-          await api("/admin/users", "POST", {
-            username: cleanUsername,
-            password: cleanPass,
-            role: selectedRole,
-            department: deptValue,
-            org: orgValue,
-            active: false
-          }).catch(() => {});
-
-          setInfoMsg(
-            `Registration submitted for ${cleanUsername}! A verification email has been sent to ${cleanEmail}. Please verify your email address. Once verified, your account will await Dean's Office approval before activation.`
-          );
-          setMode("signin");
-          return;
-        } else {
-          await api("/admin/users", "POST", {
-            username: cleanUsername,
-            password: cleanPass,
-            role: selectedRole,
-            department: deptValue,
-            org: orgValue,
-            active: true
-          });
-
-          setInfoMsg(
-            `Local user ${cleanUsername} registered successfully in the local store. You can now sign in.`
-          );
-          setMode("signin");
-          return;
+        if (regRes.token) {
+          setToken(regRes.token);
         }
+
+        // Also sync with Supabase if configured in environment
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase.auth.signUp({
+              email: cleanEmail,
+              password: cleanPass,
+              options: {
+                data: {
+                  username: cleanUsername,
+                  full_name: fullName.trim(),
+                  role: selectedRole,
+                  department: deptValue,
+                  org: orgValue
+                }
+              }
+            });
+          } catch (sbErr) {
+            console.warn("[Supabase Sync]", sbErr);
+          }
+        }
+
+        const newUser = regRes.user || {
+          username: cleanUsername,
+          role: selectedRole,
+          department: deptValue,
+          org: orgValue,
+          email: cleanEmail,
+          full_name: fullName.trim()
+        };
+
+        setRegisteredUser(newUser as User);
+        setInfoMsg(
+          regRes.message ||
+            `Account successfully registered and verified for ${cleanUsername}! You are now authenticated.`
+        );
+        return;
       }
 
       // -------------------------------------------------------------
       // SIGN IN FLOW
       // -------------------------------------------------------------
-      const demoUsers = [
-        "admin", "dean.office", "dean_office", "dean",
-        "coord_cse", "coord.cse", "coord_ece", "coord.ece", "coord_me", "coord.me",
-        "club_dramatics", "dramatics.society", "club_robotics", "robotics.club",
-        "fac_f01", "ananya.mishra"
-      ];
+      const loginIdentifier = cleanUsername || cleanEmail;
 
-      const isLikelyDemo =
-        demoUsers.includes(cleanUsername) ||
-        demoUsers.includes(cleanEmail.split("@")[0]) ||
-        (cleanEmail.endsWith("@cit.ac.in") && ["admin", "coord", "fac", "club"].some(p => cleanUsername.startsWith(p)));
+      // 1. Direct login via backend API (works for both demo personas & newly registered accounts)
+      try {
+        const res = await api<{ token: string; user?: User }>("/auth/login", "POST", {
+          username: loginIdentifier,
+          password: cleanPass
+        });
 
-      // 1. For institutional demo personas, prioritize instant local backend login
-      if (isLikelyDemo) {
-        try {
-          const loginIdentifier = cleanUsername || cleanEmail;
-          const res = await api("/auth/login", "POST", {
-            username: loginIdentifier,
-            password: cleanPass
-          });
-
+        if (res.token) {
           setToken(res.token);
           const me = await api<User>("/me");
           if (onSuccess) onSuccess(me);
           return;
-        } catch (demoErr: any) {
-          if (!isSupabaseConfigured()) {
-            throw demoErr;
-          }
         }
-      }
+      } catch (loginErr: any) {
+        // 2. If Supabase is configured and local backend didn't authenticate, fallback to Supabase
+        if (isSupabaseConfigured()) {
+          const targetEmail = cleanEmail.includes("@")
+            ? cleanEmail
+            : cleanUsername.includes("@")
+            ? cleanUsername
+            : `${cleanUsername}@cit.ac.in`;
 
-      // 2. Supabase Auth flow for registered institutional users
-      if (isSupabaseConfigured()) {
-        const targetEmail = cleanEmail.includes("@")
-          ? cleanEmail
-          : cleanUsername.includes("@")
-          ? cleanUsername
-          : `${cleanUsername}@cit.ac.in`;
+          const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
+            email: targetEmail,
+            password: cleanPass
+          });
 
-        const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
-          email: targetEmail,
-          password: cleanPass
-        });
-
-        if (authErr) {
-          // If Supabase sign-in failed, attempt direct API login as secondary fallback
-          try {
-            const res = await api("/auth/login", "POST", {
-              username: cleanUsername || cleanEmail,
-              password: cleanPass
-            });
-            setToken(res.token);
+          if (!authErr && authData?.session) {
+            setToken(authData.session.access_token);
             const me = await api<User>("/me");
             if (onSuccess) onSuccess(me);
             return;
-          } catch {
-            const errMsg = authErr.message || "";
-            if (
-              errMsg.toLowerCase().includes("email not confirmed") ||
-              errMsg.toLowerCase().includes("email not verified")
-            ) {
-              throw new Error(
-                `Institutional email not verified. Please check your inbox at ${targetEmail} and click the confirmation link before logging in.`
-              );
-            }
-            throw new Error(
-              errMsg.toLowerCase().includes("invalid login credentials")
-                ? `Bad credentials: Password or email does not match. For demo access use ${currentRoleInfo.demoUser} / ${currentRoleInfo.demoPass} or click the 1-Click Demo buttons below.`
-                : (errMsg || "Authentication failed. Please verify credentials.")
-            );
           }
         }
-
-        if (!authData.user || !authData.session) {
-          throw new Error("Supabase authentication failed. No active session returned.");
-        }
-
-        // Enforce email verification check
-        if (!authData.user.email_confirmed_at && !(authData.user as any).confirmed_at) {
-          await supabase.auth.signOut();
-          throw new Error(
-            `Institutional email not verified. Please check your inbox at ${authData.user.email} and confirm your email before logging in.`
-          );
-        }
-
-        // Fetch profile
-        const profile = await fetchUserProfile(authData.user.id);
-        if (!profile) {
-          await supabase.auth.signOut();
-          throw new Error(
-            "Institutional profile record not found. Please contact Dean's Office for profile initialization."
-          );
-        }
-
-        if (profile.approval_status === "rejected") {
-          await supabase.auth.signOut();
-          throw new Error(
-            "Account Registration Rejected: Your institutional account request was declined by the Dean's Office."
-          );
-        }
-        if (profile.approval_status !== "approved") {
-          await supabase.auth.signOut();
-          throw new Error(
-            `Account Pending Approval: Your email is verified, but your account is currently "${profile.approval_status}". Dean's Office approval is required.`
-          );
-        }
-
-        if (profile.active === false) {
-          await supabase.auth.signOut();
-          throw new Error(
-            "Account Deactivated: This institutional account has been deactivated by the Dean's Office."
-          );
-        }
-
-        setToken(authData.session.access_token);
-        const me = await api<User>("/me");
-        if (onSuccess) onSuccess(me);
-        return;
+        throw loginErr;
       }
-
-      // 3. Local direct login fallback
-      const loginIdentifier = cleanUsername || cleanEmail;
-      const res = await api("/auth/login", "POST", {
-        username: loginIdentifier,
-        password: cleanPass
-      });
-
-      setToken(res.token);
-      const me = await api<User>("/me");
-      if (onSuccess) onSuccess(me);
     } catch (error: any) {
       setErr(error.message || "Authentication failed. Please verify credentials.");
     } finally {
@@ -528,17 +431,6 @@ export default function Login({ onSuccess }: LoginProps) {
                 <div className="flex items-center bg-[#FAF5ED] p-1 rounded-xl border border-[#E8DEC8]">
                   <button
                     type="button"
-                    onClick={() => handleSwitchMode("signin")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      mode === "signin"
-                        ? "bg-[#7B1123] text-white shadow-sm"
-                        : "text-stone-600 hover:text-stone-900"
-                    }`}
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => handleSwitchMode("register")}
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                       mode === "register"
@@ -547,6 +439,17 @@ export default function Login({ onSuccess }: LoginProps) {
                     }`}
                   >
                     Register
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchMode("signin")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      mode === "signin"
+                        ? "bg-[#7B1123] text-white shadow-sm"
+                        : "text-stone-600 hover:text-stone-900"
+                    }`}
+                  >
+                    Sign In
                   </button>
                 </div>
               </div>
@@ -583,6 +486,44 @@ export default function Login({ onSuccess }: LoginProps) {
                 <div className="mb-4 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5">
                   <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                   <span className="font-medium">{infoMsg}</span>
+                </div>
+              )}
+
+              {/* Verified Account Action Banner */}
+              {registeredUser && (
+                <div className="mb-4 p-4 rounded-xl bg-emerald-50/95 border border-emerald-300 text-emerald-950 text-xs space-y-3 shadow-xs">
+                  <div className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-sm text-emerald-900 flex items-center gap-2">
+                        <span>Institutional Identity Verified</span>
+                        <span className="px-2 py-0.5 text-[10px] rounded bg-emerald-200 text-emerald-800 font-bold uppercase tracking-wide">
+                          Active & Verified
+                        </span>
+                      </div>
+                      <div className="text-emerald-800 mt-1 leading-relaxed">
+                        Account created for <strong>{registeredUser.full_name || registeredUser.username}</strong> (@{registeredUser.username}).<br />
+                        Designation: <span className="font-bold text-[#7B1123]">{registeredUser.role}</span> {registeredUser.department ? `(${registeredUser.department})` : ""}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => onSuccess(registeredUser)}
+                      className="px-4 py-2 rounded-xl bg-[#7B1123] hover:bg-[#600d1b] text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-950/15 cursor-pointer transition-all"
+                    >
+                      <span>Enter CIT Dashboard Now</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchMode("signin")}
+                      className="px-3.5 py-2 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 font-semibold text-xs cursor-pointer transition-all"
+                    >
+                      Or Test Sign In
+                    </button>
+                  </div>
                 </div>
               )}
 

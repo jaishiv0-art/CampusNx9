@@ -40,11 +40,17 @@ def conn():
         _conn.row_factory = sqlite3.Row
         _conn.executescript("""
         CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY, v TEXT);
-        CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY, pw TEXT, role TEXT, department TEXT, faculty_id TEXT, org TEXT, active INTEGER DEFAULT 1);
+        CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY, pw TEXT, role TEXT, department TEXT, faculty_id TEXT, org TEXT, active INTEGER DEFAULT 1, email TEXT, full_name TEXT, verified INTEGER DEFAULT 1);
         CREATE TABLE IF NOT EXISTS bookings(id TEXT PRIMARY KEY, owner TEXT, status TEXT, request TEXT, recommended TEXT, decision TEXT, decided_by TEXT, created TEXT);
         CREATE TABLE IF NOT EXISTS proposals(id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT, created_by TEXT, status TEXT, payload TEXT, result TEXT, decided_by TEXT, created TEXT);
         CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, actor TEXT, action TEXT, detail TEXT);
         """)
+
+        for col, col_def in [("email", "TEXT"), ("full_name", "TEXT"), ("verified", "INTEGER DEFAULT 1")]:
+            try:
+                _conn.execute(f"ALTER TABLE users ADD COLUMN {col} {col_def}")
+            except Exception:
+                pass
 
         # Ensure default institutional accounts are always seeded
         try:
