@@ -46,7 +46,8 @@ export interface UserProfile {
 }
 
 /**
- * Fetch profile associated with an auth user id
+ * Fetch profile associated with an auth user id from public.profiles
+ * with reliable fallback to auth user metadata if table permissions are restricted.
  */
 export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
   if (!isSupabaseConfigured()) return null;
@@ -54,14 +55,38 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("user_id", userId)
+      .or(`user_id.eq.${userId},id.eq.${userId}`)
       .maybeSingle();
 
     if (error) {
       console.warn("[Supabase] fetchUserProfile notice:", error.message);
-      return null;
     }
-    return data as UserProfile | null;
+
+    if (data) {
+      return data as UserProfile;
+    }
+
+    // Fallback: extract metadata from current authenticated user session if matching
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData?.user && authData.user.id === userId) {
+      const meta = authData.user.user_metadata || {};
+      return {
+        id: authData.user.id,
+        user_id: authData.user.id,
+        username: meta.username || authData.user.email?.split("@")[0] || "user",
+        full_name: meta.full_name || "",
+        email: authData.user.email || "",
+        role: (meta.role as any) || "FACULTY",
+        department: meta.department || null,
+        faculty_id: meta.faculty_id || null,
+        org: meta.org || null,
+        approval_status: (meta.approval_status as any) || "pending",
+        active: meta.active !== false,
+        created_at: authData.user.created_at,
+        updated_at: authData.user.updated_at
+      };
+    }
+    return null;
   } catch (err) {
     console.warn("[Supabase] fetchUserProfile error:", err);
     return null;
@@ -78,6 +103,25 @@ export async function sendPasswordResetEmail(email: string) {
   const cleanEmail = email.trim();
   const { data, error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
     redirectTo: typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Resend verification email for an unconfirmed signup
+ */
+export async function resendVerificationEmail(email: string) {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured yet. Please configure VITE_SUPABASE_URL.");
+  }
+  const cleanEmail = email.trim();
+  const { data, error } = await supabase.auth.resend({
+    type: "signup",
+    email: cleanEmail,
+    options: {
+      emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/login` : undefined
+    }
   });
   if (error) throw error;
   return data;

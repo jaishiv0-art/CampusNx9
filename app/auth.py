@@ -56,27 +56,69 @@ def current_user(authorization: str = Header(default="")):
     # 1. Attempt verification as a Supabase Auth access token
     sb = getattr(store, "get_supabase_client", lambda: None)()
     if sb:
+        # Pre-check token claims to distinguish Supabase JWT from local HS256 tokens
+        is_supabase_token = False
         try:
-            res = sb.auth.get_user(token_str)
-            if res and res.user:
-                sb_user = res.user
-                uid = sb_user.id
-                # Look up institutional profile in public.profiles
-                prof_res = (
-                    sb.table("profiles")
-                    .select("*")
-                    .eq("user_id", uid)
-                    .execute()
-                )
-                if prof_res.data and len(prof_res.data) > 0:
-                    prof = prof_res.data[0]
+            unverified = jwt.decode(token_str, options={"verify_signature": False})
+            iss = unverified.get("iss", "")
+            if "supabase" in iss or unverified.get("aud") == "authenticated":
+                is_supabase_token = True
+        except Exception:
+            pass
+
+        if is_supabase_token:
+            try:
+                res = sb.auth.get_user(token_str)
+                if res and res.user:
+                    sb_user = res.user
+                    uid = sb_user.id
+
+                    # Enforce institutional email verification check
+                    if not sb_user.email_confirmed_at and not getattr(sb_user, "confirmed_at", None):
+                        raise HTTPException(
+                            403,
+                            "Institutional email address is not verified. Please check your inbox and confirm your email.",
+                        )
+
+                    # Look up institutional profile in public.profiles with metadata fallback
+                    prof = None
+                    try:
+                        prof_res = (
+                            sb.table("profiles")
+                            .select("*")
+                            .or_(f"user_id.eq.{uid},id.eq.{uid}")
+                            .execute()
+                        )
+                        if prof_res.data and len(prof_res.data) > 0:
+                            prof = prof_res.data[0]
+                    except Exception:
+                        pass
+
+                    if not prof:
+                        meta = getattr(sb_user, "user_metadata", None) or {}
+                        prof = {
+                            "username": meta.get("username") or (sb_user.email or "").split("@")[0] or "user",
+                            "full_name": meta.get("full_name") or "",
+                            "role": meta.get("role") or "FACULTY",
+                            "department": meta.get("department"),
+                            "faculty_id": meta.get("faculty_id"),
+                            "org": meta.get("org"),
+                            "approval_status": meta.get("approval_status", "pending"),
+                            "active": meta.get("active", True),
+                            "email": sb_user.email,
+                        }
 
                     # Enforce approval status check
                     approval_status = prof.get("approval_status", "pending")
-                    if approval_status != "approved":
+                    if approval_status == "rejected":
                         raise HTTPException(
                             403,
-                            f"Account pending institutional approval (status: {approval_status}). Please contact the Dean's Office.",
+                            "Institutional account rejected. Your registration request was declined by the Dean's Office.",
+                        )
+                    elif approval_status != "approved":
+                        raise HTTPException(
+                            403,
+                            f"Account pending institutional approval (status: {approval_status}). Please wait for Dean's Office authorization.",
                         )
 
                     # Enforce active account check
@@ -90,11 +132,7 @@ def current_user(authorization: str = Header(default="")):
                     if role not in PERMS:
                         role = "FACULTY"
 
-                    username = (
-                        prof.get("username")
-                        or (sb_user.email or "").split("@")[0]
-                        or "user"
-                    )
+                    username = prof.get("username") or (sb_user.email or "").split("@")[0] or "user"
                     dept = prof.get("department")
                     fid = prof.get("faculty_id")
                     org = prof.get("org")
@@ -122,11 +160,11 @@ def current_user(authorization: str = Header(default="")):
                         "email": prof.get("email") or sb_user.email,
                         "auth_provider": "supabase",
                     }
-        except HTTPException:
-            raise
-        except Exception:
-            # Token was not a valid Supabase token; fall through to local HS256 decode
-            pass
+            except HTTPException:
+                raise
+            except Exception as e:
+                # Supabase token rejected or verification failed
+                raise HTTPException(401, f"Supabase authorization failed: {str(e)}")
 
     # 2. Fallback: Local HS256 JWT decode (for instant demo accounts & local tests)
     try:

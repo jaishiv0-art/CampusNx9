@@ -4,7 +4,8 @@ import {
   supabase,
   isSupabaseConfigured,
   sendPasswordResetEmail,
-  fetchUserProfile
+  fetchUserProfile,
+  resendVerificationEmail
 } from "../supabase";
 import {
   Shield,
@@ -282,9 +283,15 @@ export default function Login({ onSuccess }: LoginProps) {
 
       // If Supabase is configured and not an offline demo user, authenticate via Supabase
       if (isSupabaseConfigured() && !isDemoAccount) {
+        const targetEmail = cleanEmail.includes("@")
+          ? cleanEmail
+          : cleanUsername.includes("@")
+          ? cleanUsername
+          : `${cleanUsername}@cit.ac.in`;
+
         // 1. Authenticate using Supabase signInWithPassword()
         const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
+          email: targetEmail,
           password: cleanPass
         });
 
@@ -295,7 +302,7 @@ export default function Login({ onSuccess }: LoginProps) {
             errMsg.toLowerCase().includes("email not verified")
           ) {
             throw new Error(
-              "Institutional email not verified. Please check your inbox and click the verification link before logging in."
+              `Institutional email not verified. Please check your inbox at ${targetEmail} and click the verification link before logging in.`
             );
           }
           throw new Error(errMsg || "Invalid institutional email or password.");
@@ -305,41 +312,62 @@ export default function Login({ onSuccess }: LoginProps) {
           throw new Error("Supabase authentication failed. No active session returned.");
         }
 
-        // 2. Fetch authenticated user's profile from public.profiles
+        // 2. Enforce email confirmation check on the authenticated user object
+        if (!authData.user.email_confirmed_at && !(authData.user as any).confirmed_at) {
+          await supabase.auth.signOut();
+          throw new Error(
+            `Institutional email not verified. Please check your inbox at ${authData.user.email} and confirm your email before logging in.`
+          );
+        }
+
+        // 3. Fetch authenticated user's profile from public.profiles
         const profile = await fetchUserProfile(authData.user.id);
 
-        if (profile) {
-          // 3. Verify that the supplied username matches the authenticated user's profile
-          if (cleanUsername && profile.username) {
-            if (cleanUsername !== profile.username.trim().toLowerCase()) {
-              await supabase.auth.signOut();
-              throw new Error(
-                `Username mismatch: The supplied username "${username}" does not match the registered profile handle "${profile.username}".`
-              );
-            }
-          }
+        if (!profile) {
+          await supabase.auth.signOut();
+          throw new Error(
+            "Institutional profile record not found. Please contact the Dean's Office for profile initialization."
+          );
+        }
 
-          // 4. Check approval_status
-          if (profile.approval_status !== "approved") {
+        // 4. Verify that the supplied username matches the authenticated user's profile
+        if (cleanUsername && profile.username) {
+          const suppliedUser = cleanUsername.split("@")[0].trim().toLowerCase();
+          const profileUser = profile.username.trim().toLowerCase();
+          if (suppliedUser !== profileUser) {
             await supabase.auth.signOut();
             throw new Error(
-              `Account Pending Approval: Your account is currently "${profile.approval_status}". Dean's Office approval is required before logging in.`
-            );
-          }
-
-          // 5. Check active account status
-          if (profile.active === false) {
-            await supabase.auth.signOut();
-            throw new Error(
-              "Account Deactivated: This institutional account has been deactivated by the Dean's Office."
+              `Username mismatch: The supplied username "${username}" does not match the registered profile handle "${profile.username}".`
             );
           }
         }
 
-        // 6. Set Supabase access token for subsequent backend API requests
+        // 5. Check profile approval_status
+        if (profile.approval_status === "rejected") {
+          await supabase.auth.signOut();
+          throw new Error(
+            "Account Registration Rejected: Your institutional account request was declined by the Dean's Office. Please contact administration."
+          );
+        }
+        if (profile.approval_status !== "approved") {
+          await supabase.auth.signOut();
+          throw new Error(
+            `Account Pending Approval: Your email is verified, but your account is currently "${profile.approval_status}". Dean's Office approval is required before logging in.`
+          );
+        }
+
+        // 6. Check active account status
+        if (profile.active === false) {
+          await supabase.auth.signOut();
+          throw new Error(
+            "Account Deactivated: This institutional account has been deactivated by the Dean's Office."
+          );
+        }
+
+        // 7. Set Supabase access token for subsequent backend API requests
         setToken(authData.session.access_token);
 
-        // 7. Call /me endpoint which verifies the token and returns authorized role
+        // 8. Call /me endpoint which verifies the token and returns authorized role
         const me = await api<User>("/me");
         if (onSuccess) onSuccess(me);
         return;
@@ -497,9 +525,28 @@ export default function Login({ onSuccess }: LoginProps) {
 
               {/* Error Alert */}
               {err && (
-                <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2.5">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                  <span className="font-medium">{err}</span>
+                <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex flex-col gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                    <span className="font-medium">{err}</span>
+                  </div>
+                  {err.toLowerCase().includes("not verified") && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await resendVerificationEmail(email || username);
+                          setInfoMsg("Verification email resent! Please check your inbox and spam folder.");
+                          setErr("");
+                        } catch (rErr: any) {
+                          setErr(rErr.message || "Failed to resend verification email.");
+                        }
+                      }}
+                      className="text-[11px] font-bold text-[#7B1123] hover:underline text-left pl-6"
+                    >
+                      Resend Verification Email →
+                    </button>
+                  )}
                 </div>
               )}
 
