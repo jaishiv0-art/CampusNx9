@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from "react";
-import { User, RoleType, DEMO_USERS, roleBadgeInfo, setToken, api } from "../api";
-=======
-import React from "react";
 import { User, RoleType, roleBadgeInfo, setToken, api } from "../api";
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
 import {
   Calendar,
   Sparkles,
@@ -24,10 +19,7 @@ interface NavbarProps {
   onLogout: () => void;
 }
 
-<<<<<<< HEAD
-export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: NavbarProps) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [switching, setSwitching] = useState(false);
+export default function Navbar({ user, tab, setTab, onLogout }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
 
   // Scroll-based navbar background transition
@@ -38,9 +30,6 @@ export default function Navbar({ user, tab, setTab, onUserSwitch, onLogout }: Na
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-=======
-export default function Navbar({ user, tab, setTab, onLogout }: NavbarProps) {
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
 
   const has = (k: string) => user.permissions.includes("*") || user.permissions.includes(k);
 
@@ -138,64 +127,6 @@ export default function Navbar({ user, tab, setTab, onLogout }: NavbarProps) {
             })}
           </nav>
 
-<<<<<<< HEAD
-          {/* User Profile & Quick Role Switcher */}
-          <div
-            className="flex items-center gap-2 sm:gap-3"
-            style={{ animation: "fade-down 0.4s cubic-bezier(0.19,1,0.22,1) 0.3s both" }}
-          >
-            {/* Quick Role Switcher Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all duration-300 ${badge.bg} ${badge.border} ${badge.text} hover:brightness-110`}
-                title="Quickly switch between official roles"
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span className="max-w-[120px] truncate">{user.username}</span>
-                <span className="hidden lg:inline-block">({badge.label})</span>
-                <ChevronDown className={`w-3.5 h-3.5 opacity-70 transition-transform duration-300 ${dropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {dropdownOpen && (
-                <div className="dropdown-enter absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl p-2 z-50 border border-stone-200 ring-1 ring-black/10">
-                  <div className="px-3 py-2 border-b border-stone-200">
-                    <p className="text-xs font-bold text-stone-900">Switch Active Role</p>
-                    <p className="text-[11px] text-stone-600 font-medium">Instantly test the 4 competition user roles</p>
-                  </div>
-                  <div className="py-1 space-y-1">
-                    {DEMO_USERS.map((demo, i) => {
-                      const isCurrent = user.username === demo.username;
-                      return (
-                        <button
-                          key={demo.username}
-                          disabled={switching || isCurrent}
-                          onClick={() => switchRole(demo)}
-                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs flex items-center justify-between transition-all group ${
-                            isCurrent
-                              ? "bg-[#7B1123]/10 text-[#7B1123] font-bold border border-[#7B1123]/30 shadow-xs"
-                              : "text-stone-800 hover:bg-stone-200 hover:text-stone-950 border border-transparent hover:border-stone-400 font-medium"
-                          }`}
-                          style={{
-                            animation: `fade-up-subtle 0.3s cubic-bezier(0.19,1,0.22,1) ${0.05 + i * 0.04}s both`,
-                          }}
-                        >
-                          <div>
-                            <div className={`font-bold ${isCurrent ? "text-[#7B1123]" : "text-stone-900 group-hover:text-stone-950"}`}>
-                              {demo.label}
-                            </div>
-                            <div className={`text-[10px] mt-0.5 ${isCurrent ? "text-[#7B1123]/90 font-medium" : "text-stone-600 group-hover:text-stone-800 font-medium"}`}>
-                              {demo.badge}
-                            </div>
-                          </div>
-                          {isCurrent && <CheckCircle2 className="w-4 h-4 text-[#7B1123] shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-=======
           {/* User Profile & Active Session Indicator (Role Locked) */}
           <div className="flex items-center gap-2 sm:gap-3">
             <div
@@ -205,26 +136,17 @@ export default function Navbar({ user, tab, setTab, onLogout }: NavbarProps) {
               <Users className="w-3.5 h-3.5 text-amber-300 group-hover:text-amber-200 transition-colors" />
               <span className="max-w-[120px] truncate font-black text-white">{user.username}</span>
               <span className="hidden lg:inline-block text-stone-200 group-hover:text-white font-semibold">({badge.label})</span>
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
             </div>
 
             {/* Secure Sign Out Button */}
             <button
               onClick={onLogout}
-<<<<<<< HEAD
-              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-300 border border-transparent hover:border-rose-500/20 hover:shadow-lg hover:shadow-rose-500/5"
-              title="Sign Out"
-              aria-label="Sign Out"
-            >
-              <LogOut className="w-4 h-4 transition-transform duration-300 hover:scale-110" />
-=======
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-200 hover:text-white bg-rose-950/40 hover:bg-rose-900 border border-rose-800/60 hover:border-rose-600 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
               title="Sign Out"
               aria-label="Sign Out"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Sign Out</span>
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
             </button>
           </div>
         </div>

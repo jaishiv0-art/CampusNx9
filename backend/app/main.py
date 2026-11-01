@@ -336,10 +336,7 @@ def login(b: Login):
     if not authenticated or not r:
         raise HTTPException(401, "Bad credentials: Check email/username or password. For demo accounts use admin / admin123")
 
-<<<<<<< HEAD
     u = dict(r[0])
-=======
-    u = r[0]
     # Enforce strict 1-to-1 role binding if role was selected on the login page
     if b.role:
         expected_role = b.role.strip().upper()
@@ -348,8 +345,6 @@ def login(b: Login):
                 403,
                 f"Role Binding Invariant Enforced: Account '{u['username']}' is strictly bound to role '{u['role']}', not '{b.role}'. Access denied."
             )
-
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
     store.audit(u["username"], "login")
     return {
         "token": auth.make_token(u),

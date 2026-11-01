@@ -4,6 +4,8 @@ import { supabase } from "./supabase";
 import Navbar from "./components/Navbar";
 import AmbientBackground from "./components/AmbientBackground";
 import Login from "./views/Login";
+import HomePage from "./pages/HomePage";
+import "./pages/HomePage.css";
 import RoleDashboardOverview from "./views/RoleDashboardOverview";
 import Timetable from "./views/Timetable";
 import Bookings from "./views/Bookings";
@@ -32,12 +34,14 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [tab, setTab] = useState("timetable");
   const [loading, setLoading] = useState(true);
+  const [showHomepage, setShowHomepage] = useState(true);
   const { glowRef, dotRef } = useCursorGlow();
 
   useEffect(() => {
     api<User>("/me")
       .then((u) => {
         setUser(u);
+        setShowHomepage(false); // Already authenticated, skip homepage
         setTab(getDefaultTabForRole(u.role));
       })
       .catch(() => {
@@ -61,6 +65,7 @@ export default function App() {
       sessionStorage.clear();
     } catch {}
     setUser(null);
+    setShowHomepage(true); // Show homepage again after logout
     setTab("timetable");
   };
 
@@ -106,22 +111,29 @@ export default function App() {
   }
 
   if (!user) {
+    if (showHomepage) {
+      return (
+        <>
+          <HomePage onEnter={() => setShowHomepage(false)} />
+          {/* Custom cursor for desktop */}
+          <div ref={glowRef} className="cursor-glow" />
+          <div ref={dotRef} className="cursor-dot" />
+        </>
+      );
+    }
+
     return (
-<<<<<<< HEAD
       <>
-        <Login onSuccess={(u) => setUser(u)} />
+        <Login
+          onSuccess={(u) => {
+            setUser(u);
+            setTab(getDefaultTabForRole(u.role));
+          }}
+        />
         {/* Custom cursor for desktop */}
         <div ref={glowRef} className="cursor-glow" />
         <div ref={dotRef} className="cursor-dot" />
       </>
-=======
-      <Login
-        onSuccess={(u) => {
-          setUser(u);
-          setTab(getDefaultTabForRole(u.role));
-        }}
-      />
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
     );
   }
 
@@ -176,8 +188,6 @@ export default function App() {
           {tab === "assistant" && <Assistant />}
         </div>
       </main>
-<<<<<<< HEAD
-
       {/* =========================================================================
           PREMIUM FOOTER
           ========================================================================= */}
@@ -219,8 +229,6 @@ export default function App() {
           </div>
         </div>
       </footer>
-=======
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
     </div>
   );
 }

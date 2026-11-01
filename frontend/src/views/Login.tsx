@@ -224,62 +224,8 @@ export default function Login({ onSuccess }: LoginProps) {
           org: orgValue
         });
 
-<<<<<<< HEAD
         if (regRes.token) {
           setToken(regRes.token);
-=======
-          if (signUpErr) {
-            throw new Error(signUpErr.message);
-          }
-
-          if (signUpData?.user) {
-            try {
-              await supabase.from("profiles").upsert({
-                user_id: signUpData.user.id,
-                username: cleanUsername,
-                full_name: fullName.trim(),
-                email: cleanEmail,
-                role: selectedRole,
-                department: deptValue,
-                org: orgValue,
-                approval_status: "pending",
-                active: true
-              });
-            } catch (pErr: any) {
-              console.warn("[Profiles Upsert Notice]", pErr?.message);
-            }
-          }
-
-          await api("/admin/users", "POST", {
-            username: cleanUsername,
-            password: cleanPass,
-            role: selectedRole,
-            department: deptValue,
-            org: orgValue,
-            active: false
-          }).catch(() => { });
-
-          setInfoMsg(
-            `Registration submitted for ${cleanUsername}! A verification email has been sent to ${cleanEmail}. Please verify your email address. Once verified, your account will await Dean's Office approval before activation.`
-          );
-          setMode("signin");
-          return;
-        } else {
-          await api("/admin/users", "POST", {
-            username: cleanUsername,
-            password: cleanPass,
-            role: selectedRole,
-            department: deptValue,
-            org: orgValue,
-            active: true
-          });
-
-          setInfoMsg(
-            `Local user ${cleanUsername} registered successfully in the local store. You can now sign in.`
-          );
-          setMode("signin");
-          return;
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
         }
 
         // Also sync with Supabase if configured in environment
@@ -325,14 +271,6 @@ export default function Login({ onSuccess }: LoginProps) {
       // -------------------------------------------------------------
       const loginIdentifier = cleanUsername || cleanEmail;
 
-<<<<<<< HEAD
-      // 1. Direct login via backend API (works for both demo personas & newly registered accounts)
-      try {
-        const res = await api<{ token: string; user?: User }>("/auth/login", "POST", {
-          username: loginIdentifier,
-          password: cleanPass
-        });
-=======
       const isLikelyDemo =
         demoUsers.includes(cleanUsername) ||
         demoUsers.includes(cleanEmail.split("@")[0]) ||
@@ -342,37 +280,23 @@ export default function Login({ onSuccess }: LoginProps) {
       if (isLikelyDemo) {
         try {
           const loginIdentifier = cleanUsername || cleanEmail;
-          const res = await api("/auth/login", "POST", {
+          const res = await api<{ token: string; user?: User }>("/auth/login", "POST", {
             username: loginIdentifier,
             password: cleanPass,
             role: selectedRole
           });
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
 
-        if (res.token) {
-          setToken(res.token);
-          const me = await api<User>("/me");
-          if (onSuccess) onSuccess(me);
-          return;
+          if (res.token) {
+            setToken(res.token);
+            const me = await api<User>("/me");
+            if (onSuccess) onSuccess(me);
+            return;
+          }
+        } catch (loginErr: any) {
+          console.warn("[Demo Login Notice]", loginErr?.message);
         }
-      } catch (loginErr: any) {
-        // 2. If Supabase is configured and local backend didn't authenticate, fallback to Supabase
-        if (isSupabaseConfigured()) {
-          const targetEmail = cleanEmail.includes("@")
-            ? cleanEmail
-            : cleanUsername.includes("@")
-            ? cleanUsername
-            : `${cleanUsername}@cit.ac.in`;
+      }
 
-<<<<<<< HEAD
-          const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
-            email: targetEmail,
-            password: cleanPass
-          });
-
-          if (!authErr && authData?.session) {
-            setToken(authData.session.access_token);
-=======
       // 2. Supabase Auth flow for registered institutional users
       if (isSupabaseConfigured()) {
         const targetEmail = cleanEmail.includes("@")
@@ -389,81 +313,75 @@ export default function Login({ onSuccess }: LoginProps) {
         if (authErr) {
           // If Supabase sign-in failed, attempt direct API login as secondary fallback
           try {
-            const res = await api("/auth/login", "POST", {
+            const res = await api<{ token: string; user?: User }>("/auth/login", "POST", {
               username: cleanUsername || cleanEmail,
               password: cleanPass,
               role: selectedRole
             });
             setToken(res.token);
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
             const me = await api<User>("/me");
             if (onSuccess) onSuccess(me);
             return;
+          } catch {}
+        } else {
+          if (!authData.user || !authData.session) {
+            throw new Error("Supabase authentication failed. No active session returned.");
           }
-        }
-<<<<<<< HEAD
-        throw loginErr;
-      }
-=======
 
-        if (!authData.user || !authData.session) {
-          throw new Error("Supabase authentication failed. No active session returned.");
-        }
+          // Enforce email verification check
+          if (!authData.user.email_confirmed_at && !(authData.user as any).confirmed_at) {
+            await supabase.auth.signOut();
+            throw new Error(
+              `Institutional email not verified. Please check your inbox at ${authData.user.email} and confirm your email before logging in.`
+            );
+          }
 
-        // Enforce email verification check
-        if (!authData.user.email_confirmed_at && !(authData.user as any).confirmed_at) {
-          await supabase.auth.signOut();
-          throw new Error(
-            `Institutional email not verified. Please check your inbox at ${authData.user.email} and confirm your email before logging in.`
-          );
-        }
+          // Fetch profile
+          const profile = await fetchUserProfile(authData.user.id);
+          if (!profile) {
+            await supabase.auth.signOut();
+            throw new Error(
+              "Institutional profile record not found. Please contact Dean's Office for profile initialization."
+            );
+          }
 
-        // Fetch profile
-        const profile = await fetchUserProfile(authData.user.id);
-        if (!profile) {
-          await supabase.auth.signOut();
-          throw new Error(
-            "Institutional profile record not found. Please contact Dean's Office for profile initialization."
-          );
-        }
+          if (profile.approval_status === "rejected") {
+            await supabase.auth.signOut();
+            throw new Error(
+              "Account Registration Rejected: Your institutional account request was declined by the Dean's Office."
+            );
+          }
+          if (profile.approval_status !== "approved") {
+            await supabase.auth.signOut();
+            throw new Error(
+              `Account Pending Approval: Your email is verified, but your account is currently "${profile.approval_status}". Dean's Office approval is required.`
+            );
+          }
 
-        if (profile.approval_status === "rejected") {
-          await supabase.auth.signOut();
-          throw new Error(
-            "Account Registration Rejected: Your institutional account request was declined by the Dean's Office."
-          );
-        }
-        if (profile.approval_status !== "approved") {
-          await supabase.auth.signOut();
-          throw new Error(
-            `Account Pending Approval: Your email is verified, but your account is currently "${profile.approval_status}". Dean's Office approval is required.`
-          );
-        }
+          if (profile.active === false) {
+            await supabase.auth.signOut();
+            throw new Error(
+              "Account Deactivated: This institutional account has been deactivated by the Dean's Office."
+            );
+          }
 
-        if (profile.active === false) {
-          await supabase.auth.signOut();
-          throw new Error(
-            "Account Deactivated: This institutional account has been deactivated by the Dean's Office."
-          );
-        }
+          // Strict 1-to-1 Role Binding: user cannot select a different role than their authorized profile
+          if (profile.role && profile.role.toUpperCase() !== selectedRole.toUpperCase()) {
+            await supabase.auth.signOut();
+            throw new Error(
+              `Role Mismatch: Your institutional account is authorized strictly as "${profile.role}", not as "${selectedRole}". Access denied.`
+            );
+          }
 
-        // Strict 1-to-1 Role Binding: user cannot select a different role than their authorized profile
-        if (profile.role && profile.role.toUpperCase() !== selectedRole.toUpperCase()) {
-          await supabase.auth.signOut();
-          throw new Error(
-            `Role Mismatch: Your institutional account is authorized strictly as "${profile.role}", not as "${selectedRole}". Access denied.`
-          );
+          setToken(authData.session.access_token);
+          const me = await api<User>("/me");
+          if (onSuccess) onSuccess(me);
+          return;
         }
-
-        setToken(authData.session.access_token);
-        const me = await api<User>("/me");
-        if (onSuccess) onSuccess(me);
-        return;
       }
 
       // 3. Local direct login fallback
-      const loginIdentifier = cleanUsername || cleanEmail;
-      const res = await api("/auth/login", "POST", {
+      const res = await api<{ token: string; user?: User }>("/auth/login", "POST", {
         username: loginIdentifier,
         password: cleanPass,
         role: selectedRole
@@ -472,7 +390,7 @@ export default function Login({ onSuccess }: LoginProps) {
       setToken(res.token);
       const me = await api<User>("/me");
       if (onSuccess) onSuccess(me);
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
+      return;
     } catch (error: any) {
       setErr(error.message || "Authentication failed. Please verify credentials.");
     } finally {
@@ -577,19 +495,11 @@ export default function Login({ onSuccess }: LoginProps) {
           {/* =========================================================================
               LEFT COLUMN: AUTHENTICATION & ROLE ACCESS FORM
               ========================================================================= */}
-<<<<<<< HEAD
           <div className="lg:col-span-5 flex flex-col space-y-5" style={{ animation: 'fade-right 0.7s cubic-bezier(0.19,1,0.22,1) 0.1s both' }}>
-            
+
             {/* Primary Login Card */}
             <div className="card-premium bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm">
-              
-=======
-          <div className="lg:col-span-5 flex flex-col space-y-5">
 
-            {/* Primary Login Card */}
-            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm">
-
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
               {/* Header inside Card */}
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -605,29 +515,6 @@ export default function Login({ onSuccess }: LoginProps) {
                 <div className="flex items-center bg-[#FAF5ED] p-1 rounded-xl border border-[#E8DEC8]">
                   <button
                     type="button"
-<<<<<<< HEAD
-=======
-                    onClick={() => handleSwitchMode("signin")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${mode === "signin"
-                        ? "bg-[#7B1123] text-white shadow-sm"
-                        : "text-stone-600 hover:text-stone-900"
-                      }`}
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    type="button"
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
-                    onClick={() => handleSwitchMode("register")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${mode === "register"
-                        ? "bg-[#7B1123] text-white shadow-sm"
-                        : "text-stone-600 hover:text-stone-900"
-                      }`}
-                  >
-                    Register
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => handleSwitchMode("signin")}
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                       mode === "signin"
@@ -636,6 +523,17 @@ export default function Login({ onSuccess }: LoginProps) {
                     }`}
                   >
                     Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchMode("register")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      mode === "register"
+                        ? "bg-[#7B1123] text-white shadow-sm"
+                        : "text-stone-600 hover:text-stone-900"
+                    }`}
+                  >
+                    Register
                   </button>
                 </div>
               </div>
@@ -675,7 +573,6 @@ export default function Login({ onSuccess }: LoginProps) {
                 </div>
               )}
 
-<<<<<<< HEAD
               {/* Verified Account Action Banner */}
               {registeredUser && (
                 <div className="mb-4 p-4 rounded-xl bg-emerald-50/95 border border-emerald-300 text-emerald-950 text-xs space-y-3 shadow-xs">
@@ -713,17 +610,6 @@ export default function Login({ onSuccess }: LoginProps) {
                   </div>
                 </div>
               )}
-
-              {/* Institutional Rule Notice Banner */}
-              <div className="mb-5 p-3 rounded-xl bg-[#FAF5ED] border border-[#E8DEC8] flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-[#7B1123] shrink-0 mt-0.5" />
-                <p className="text-xs text-stone-700 leading-snug">
-                  <strong>Institutional Governance Rule:</strong> Nobody can approve their own booking or change request; cross-role verification strictly enforced by backend.
-                </p>
-              </div>
-=======
-
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
 
               {/* Form Content */}
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -983,16 +869,12 @@ export default function Login({ onSuccess }: LoginProps) {
                       key={r.id}
                       type="button"
                       onClick={() => handleQuickDemoLogin(r)}
-<<<<<<< HEAD
                       style={{ animation: `fade-up-subtle 0.4s cubic-bezier(0.19,1,0.22,1) ${0.1 + ROLES.indexOf(r) * 0.06}s both` }}
                       className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer hover:translate-y-[-1px] hover:shadow-md ${
                         selectedRole === r.id
-=======
-                      className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer ${selectedRole === r.id
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
                           ? "bg-[#7B1123]/10 border-[#7B1123] text-[#7B1123] shadow-xs"
                           : "border-2 border-stone-300 hover:border-[#7B1123] bg-stone-50 hover:bg-stone-200 text-stone-950 hover:text-black font-bold shadow-2xs"
-                        }`}
+                      }`}
                     >
                       <r.icon className="w-4 h-4 shrink-0 text-[#7B1123]" />
                       <div className="truncate">
@@ -1030,13 +912,7 @@ export default function Login({ onSuccess }: LoginProps) {
           {/* =========================================================================
               RIGHT COLUMN: CIT BANNER PICTURE & DETAILED SYSTEM OVERVIEW
               ========================================================================= */}
-<<<<<<< HEAD
           <div className={`lg:col-span-7 flex flex-col space-y-6 ${showMobileDetails ? "block" : "hidden lg:flex"}`} style={{ animation: 'fade-left 0.7s cubic-bezier(0.19,1,0.22,1) 0.2s both' }}>
-            
-=======
-          <div className={`lg:col-span-7 flex flex-col space-y-6 ${showMobileDetails ? "block" : "hidden lg:flex"}`}>
-
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
             {/* 1. CIT LOGO & CAMPUS BANNER PICTURE */}
             <div className="card-premium bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-3 sm:p-4 overflow-hidden backdrop-blur-sm">
               <div className="img-reveal relative rounded-xl overflow-hidden border border-[#EADCC9] shadow-inner bg-[#FAF7F2]">
@@ -1081,11 +957,7 @@ export default function Login({ onSuccess }: LoginProps) {
               </p>
 
               <div className="grid sm:grid-cols-2 gap-3 pt-1">
-<<<<<<< HEAD
-                <ScrollReveal delay={0.1} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
-=======
-                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
+                <ScrollReveal delay={0.1} className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs group">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Zero Hard Violations
@@ -1095,11 +967,7 @@ export default function Login({ onSuccess }: LoginProps) {
                   </p>
                 </ScrollReveal>
 
-<<<<<<< HEAD
-                <ScrollReveal delay={0.18} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
-=======
-                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
+                <ScrollReveal delay={0.18} className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs group">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Conflict-Free Elective Baskets
@@ -1109,11 +977,7 @@ export default function Login({ onSuccess }: LoginProps) {
                   </p>
                 </ScrollReveal>
 
-<<<<<<< HEAD
-                <ScrollReveal delay={0.26} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
-=======
-                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
+                <ScrollReveal delay={0.26} className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs group">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Lunch Break Protected
@@ -1123,11 +987,7 @@ export default function Login({ onSuccess }: LoginProps) {
                   </p>
                 </ScrollReveal>
 
-<<<<<<< HEAD
-                <ScrollReveal delay={0.34} className="p-3.5 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] space-y-1 transition-all duration-300 hover:border-[#7B1123]/30 hover:shadow-md hover:translate-y-[-1px] group">
-=======
-                <div className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs">
->>>>>>> 2edfa1f336bd3fba1c772d6b1dde8dce03d43eec
+                <ScrollReveal delay={0.34} className="p-3.5 rounded-xl bg-white border-2 border-stone-300 hover:border-[#7B1123] hover:bg-stone-100 transition-all space-y-1 shadow-2xs group">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#7B1123]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 transition-transform duration-300 group-hover:scale-110" />
                     Smart Minimal Rescheduling
