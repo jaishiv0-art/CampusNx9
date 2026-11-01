@@ -39,8 +39,9 @@ def _candidates(data, s, rooms, fac_un, room_un, lunch, lab_starts, days):
     return out
 
 
-def solve_timetable(data, baseline=None, time_limit=120, workers=8, locked=None, log=False):
-    """baseline: sid -> (day,start,room) of the current approved timetable (repair mode).
+def solve_timetable(data, baseline=None, hint=None, time_limit=120, workers=8, locked=None, log=False):
+    """baseline: sid -> (day,start,room) of the current approved timetable (repair mode with stability penalty).
+    hint: sid -> (day,start,room) to warm-start solver without stability penalties (initial generation mode).
     locked: set of session ids that must not change (optional).
     Returns dict(status, assign, objective, infeasible_sessions)."""
     days = data["calendar"]["days"]
@@ -82,6 +83,13 @@ def solve_timetable(data, baseline=None, time_limit=120, workers=8, locked=None,
         for (d, p, r) in cand[sid]:
             x[sid, d, p, r] = m.NewBoolVar(f"x_{sid}_{d}_{p}_{r}")
         m.AddExactlyOne(x[sid, d, p, r] for (d, p, r) in cand[sid])
+
+    hint_map = hint or baseline
+    if hint_map:
+        for sid, slot in hint_map.items():
+            b_tuple = tuple(slot)
+            if (sid, b_tuple[0], b_tuple[1], b_tuple[2]) in x:
+                m.AddHint(x[sid, b_tuple[0], b_tuple[1], b_tuple[2]], 1)
 
     # time indicator y[sid,d,p]
     y = defaultdict(list)

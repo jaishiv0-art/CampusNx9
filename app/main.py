@@ -63,21 +63,21 @@ def solver_mod():
         from .core import solver; return solver
     except ImportError:
         raise HTTPException(503, "OR-Tools is not installed on the server (pip install ortools).")
-def solve_fn(data, baseline=None, time_limit=None):
-    if baseline is None:
+def solve_fn(data, baseline=None, hint=None, time_limit=None):
+    if baseline is None and hint is None:
         init = store.kv_get("initial_timetable")
         if init:
-            baseline = {k: tuple(v) for k, v in init.items()}
+            hint = {k: tuple(v) for k, v in init.items()}
         else:
             try:
                 cand = config.resolve_path(None, os.path.join("data", "baseline_timetable.json"))
                 if os.path.exists(cand):
                     with open(cand, encoding="utf-8") as bf:
                         raw = json.load(bf)
-                        baseline = {k: tuple(v) for k, v in raw.items()}
+                        hint = {k: tuple(v) for k, v in raw.items()}
             except Exception:
                 pass
-    return solver_mod().solve_timetable(data, baseline=baseline, time_limit=time_limit or config.SOLVE_SECONDS, workers=config.SOLVER_WORKERS)
+    return solver_mod().solve_timetable(data, baseline=baseline, hint=hint, time_limit=time_limit or config.SOLVE_SECONDS, workers=config.SOLVER_WORKERS)
 def schedule_obj(with_fest=True):
     d = get_data(); a = get_assign()
     return export.build_schedule(config.TEAM_NAME, d, a, store.kv_get("exams"), fest() if with_fest else None)
@@ -282,7 +282,7 @@ class GenerateRequest(BaseModel):
 
 @app.post("/admin/timetable/generate")
 @app.post("/timetable/generate")
-def generate(req: Optional[GenerateRequest] = None, u=Depends(need_any("timetable.generate", "timetable.view_dept"))):
+def generate(req: Optional[GenerateRequest] = None, u=Depends(need_any("timetable.generate", "timetable.view_dept", "timetable.view_own"))):
     d = get_data()
     # 1. Custom dataset loading if requested
     if req and req.dataset_file and req.dataset_file not in ("current", "default"):

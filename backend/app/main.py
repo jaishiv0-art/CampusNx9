@@ -63,21 +63,21 @@ def solver_mod():
         from .core import solver; return solver
     except ImportError:
         raise HTTPException(503, "OR-Tools is not installed on the server (pip install ortools).")
-def solve_fn(data, baseline=None, time_limit=None):
-    if baseline is None:
+def solve_fn(data, baseline=None, hint=None, time_limit=None):
+    if baseline is None and hint is None:
         init = store.kv_get("initial_timetable")
         if init:
-            baseline = {k: tuple(v) for k, v in init.items()}
+            hint = {k: tuple(v) for k, v in init.items()}
         else:
             try:
                 cand = config.resolve_path(None, os.path.join("data", "baseline_timetable.json"))
                 if os.path.exists(cand):
                     with open(cand, encoding="utf-8") as bf:
                         raw = json.load(bf)
-                        baseline = {k: tuple(v) for k, v in raw.items()}
+                        hint = {k: tuple(v) for k, v in raw.items()}
             except Exception:
                 pass
-    return solver_mod().solve_timetable(data, baseline=baseline, time_limit=time_limit or config.SOLVE_SECONDS, workers=config.SOLVER_WORKERS)
+    return solver_mod().solve_timetable(data, baseline=baseline, hint=hint, time_limit=time_limit or config.SOLVE_SECONDS, workers=config.SOLVER_WORKERS)
 def schedule_obj(with_fest=True):
     d = get_data(); a = get_assign()
     return export.build_schedule(config.TEAM_NAME, d, a, store.kv_get("exams"), fest() if with_fest else None)
@@ -282,7 +282,7 @@ class GenerateRequest(BaseModel):
 
 @app.post("/admin/timetable/generate")
 @app.post("/timetable/generate")
-def generate(req: Optional[GenerateRequest] = None, u=Depends(need_any("timetable.generate", "timetable.view_dept"))):
+def generate(req: Optional[GenerateRequest] = None, u=Depends(need_any("timetable.generate", "timetable.view_dept", "timetable.view_own"))):
     d = get_data()
     # 1. Custom dataset loading if requested
     if req and req.dataset_file and req.dataset_file not in ("current", "default"):
@@ -310,8 +310,19 @@ def generate(req: Optional[GenerateRequest] = None, u=Depends(need_any("timetabl
 
     # 3. Constraint Satisfaction Engine (OR-Tools CP-SAT)
     # Solves placement of 189 sessions across MON–FRI, P1–P9 (with lunch strictly between P5–P6)
+    base = get_assign()
+    if not base:
+        cand_base = config.resolve_path(None, os.path.join("data", "baseline_timetable.json"))
+        if os.path.exists(cand_base):
+            try:
+                with open(cand_base, encoding="utf-8") as f:
+                    base = json.load(f)
+            except Exception:
+                pass
     time_lim = (req.time_limit_seconds if req else None) or config.SOLVE_SECONDS
-    r = solve_fn(d, time_limit=time_lim)
+    if os.environ.get("VERCEL"):
+        time_lim = min(time_lim, 15)
+    r = solve_fn(d, hint=base, time_limit=time_lim)
     if not r.get("assign"):
         raise HTTPException(409, {
             "message": "No valid timetable could be generated",
@@ -423,7 +434,7 @@ def get_schedule(u=Depends(need_any("export", "timetable.view_dept", "timetable.
 
 
 @app.get("/admin/validate")
-def run_validator(u=Depends(need_any("timetable.generate", "timetable.view_dept"))):
+def run_validator(u=Depends(need_any("timetable.generate", "timetable.view_dept", "timetable.view_own"))):
     return checker.validate(get_data(), schedule_obj(), None)
 
 
@@ -454,8 +465,12 @@ def timetable(
 ):
     d, a = get_data(), get_assign(); rows = _decorate(d, a)
     if not allowed(u, "*"):
-        if u["role"] == "FACULTY": rows = [r for r in rows if r["faculty_id"] == u["faculty_id"]]
-        else: rows = [r for r in rows if r["department"] == u["department"] or u["department"] in r["group_depts"] or any(g.startswith(u["department"]) for g in r["groups"])]
+        if u["role"] == "FACULTY":
+            if not (department or group or room or role == "ALL"):
+                rows = [r for r in rows if r["faculty_id"] == u.get("faculty_id")]
+        elif u["role"] == "DEPARTMENT_COORDINATOR":
+            if not (faculty or group or room or role == "ALL"):
+                rows = [r for r in rows if r["department"] == u.get("department") or u.get("department") in r["group_depts"] or any(g.startswith(u.get("department", "")) for g in r["groups"])]
     elif role:
         if role == "FACULTY" and faculty:
             rows = [r for r in rows if r["faculty_id"] == faculty]
@@ -485,13 +500,13 @@ def exams(u=Depends(current_user)): return {"exams": store.kv_get("exams") or []
 
 
 @app.get("/conflicts")
-def conflicts(u=Depends(need_any("timetable.generate", "timetable.view_dept"))):
+def conflicts(u=Depends(need_any("timetable.generate", "timetable.view_dept", "timetable.view_own"))):
     rep = checker.validate(get_data(), schedule_obj(), None)
     return {"hard_violation_count": rep["hard_violation_count"], "violations": rep["hard_violations"][:200], "soft": rep["soft_penalties"]}
 
 
 @app.get("/stats/utilization")
-def utilization(u=Depends(need_any("timetable.generate", "timetable.view_dept"))):
+def utilization(u=Depends(need_any("timetable.generate", "timetable.view_dept", "timetable.view_own"))):
     d, a = get_data(), get_assign(); S = {s["id"]: s for s in d["sessions"]}; used = {r["id"]: 0 for r in d["rooms"]}; low = 0
     cap = {r["id"]: r["capacity"] for r in d["rooms"]}
     for sid, (_, _, r) in a.items():

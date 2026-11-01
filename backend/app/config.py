@@ -2,8 +2,16 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-APP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-ROOT = os.path.abspath(os.path.join(APP_DIR, ".."))
+def _find_root():
+    cur = os.path.abspath(os.path.dirname(__file__))
+    for d in [cur, os.path.join(cur, ".."), os.path.join(cur, "..", "..")]:
+        d = os.path.abspath(d)
+        if os.path.exists(os.path.join(d, "data", "cit_public.json")) or os.path.exists(os.path.join(d, "cit_public.json")):
+            return d
+    return cur
+
+ROOT = _find_root()
+APP_DIR = os.path.join(ROOT, "backend") if os.path.exists(os.path.join(ROOT, "backend")) else ROOT
 
 # Load environment variables from both root .env and backend/.env
 load_dotenv(os.path.join(ROOT, ".env"))
@@ -19,12 +27,12 @@ def resolve_path(env_val, fallback_rel):
             os.path.abspath(os.path.join(ROOT, env_val))
         ])
     candidates.extend([
-        os.path.abspath(os.path.join(APP_DIR, fallback_rel)),
         os.path.abspath(os.path.join(ROOT, fallback_rel)),
-        os.path.abspath(os.path.join(APP_DIR, os.path.basename(fallback_rel))),
-        os.path.abspath(os.path.join(ROOT, os.path.basename(fallback_rel))),
-        os.path.abspath(os.path.join(APP_DIR, "data", os.path.basename(fallback_rel))),
+        os.path.abspath(os.path.join(APP_DIR, fallback_rel)),
         os.path.abspath(os.path.join(ROOT, "data", os.path.basename(fallback_rel))),
+        os.path.abspath(os.path.join(APP_DIR, "data", os.path.basename(fallback_rel))),
+        os.path.abspath(os.path.join(ROOT, os.path.basename(fallback_rel))),
+        os.path.abspath(os.path.join(APP_DIR, os.path.basename(fallback_rel))),
     ])
     for c in candidates:
         if os.path.exists(c):

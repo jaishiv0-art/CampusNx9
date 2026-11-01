@@ -5,12 +5,14 @@ import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from app.core import checker, solver, exams as ex, export, bookings as bk, disruption
 
-ROOT = os.path.join(os.path.dirname(__file__), "..")
+ROOT = os.path.dirname(os.path.abspath(__file__))
+if not os.path.exists(os.path.join(ROOT, "data", "cit_public.json")):
+    ROOT = os.path.abspath(os.path.join(ROOT, ".."))
 TEAM = os.environ.get("TEAM_NAME", "CIT Scheduler")
 SECS = int(os.environ.get("SOLVE_SECONDS", 180))
-DATA = os.environ.get("DATASET_PATH", f"{ROOT}/data/cit_public.json")
-DIS = os.environ.get("DISRUPTION_PATH", f"{ROOT}/examples/sample_disruption.json")
-OUT = os.environ.get("EXPORT_DIR", f"{ROOT}/exports")
+DATA = os.environ.get("DATASET_PATH", os.path.join(ROOT, "data", "cit_public.json"))
+DIS = os.environ.get("DISRUPTION_PATH", os.path.join(ROOT, "examples", "sample_disruption.json"))
+OUT = os.environ.get("EXPORT_DIR", os.path.join(ROOT, "exports"))
 
 data = json.load(open(DATA, encoding="utf-8"))
 r = solver.solve_timetable(data, time_limit=SECS)

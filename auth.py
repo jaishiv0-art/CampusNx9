@@ -8,7 +8,9 @@ except ImportError:
 PERMS = {
     "ADMIN": {"*"},
     "DEPARTMENT_COORDINATOR": {
+        "timetable.generate",
         "timetable.view_dept",
+        "timetable.view_own",
         "change.request",
         "booking.create",
         "booking.view_dept",
@@ -17,6 +19,8 @@ PERMS = {
         "booking.view_own",
     },
     "FACULTY": {
+        "timetable.generate",
+        "timetable.view_dept",
         "timetable.view_own",
         "unavailability.mark",
         "session.request_extra",

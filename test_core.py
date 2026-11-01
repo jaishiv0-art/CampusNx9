@@ -75,7 +75,15 @@ def test_disruption_validation_and_noop(data, base):
     assert p["status"] == "NO_CHANGE_NEEDED" and p["new_assign"] == base      # unaffected sessions preserved
 
 def test_disruption_diff_reasons_cite_real_violations(data, base):
-    dis = json.load(open(os.path.join(os.path.dirname(__file__), "..", "..", "examples", "sample_disruption.json")))
+    dis = None
+    for p in [
+        os.path.join(os.path.dirname(__file__), "examples", "sample_disruption.json"),
+        os.path.join(os.path.dirname(__file__), "sample_disruption.json"),
+        os.path.join(os.path.dirname(__file__), "..", "..", "examples", "sample_disruption.json"),
+    ]:
+        if os.path.exists(p):
+            dis = json.load(open(p, encoding="utf-8"))
+            break
     nd = disruption.apply_changes(data, dis["changes"])
     affected = [s for s, (d, p, r) in base.items() if r == "CR-102"]
     if affected:
