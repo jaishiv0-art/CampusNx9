@@ -4,6 +4,8 @@ import { supabase } from "./supabase";
 import Navbar from "./components/Navbar";
 import AmbientBackground from "./components/AmbientBackground";
 import Login from "./views/Login";
+import HomePage from "./pages/HomePage";
+import "./pages/HomePage.css";
 import RoleDashboardOverview from "./views/RoleDashboardOverview";
 import Timetable from "./views/Timetable";
 import Bookings from "./views/Bookings";
@@ -17,12 +19,14 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [tab, setTab] = useState("timetable");
   const [loading, setLoading] = useState(true);
+  const [showHomepage, setShowHomepage] = useState(true);
   const { glowRef, dotRef } = useCursorGlow();
 
   useEffect(() => {
     api<User>("/me")
       .then((u) => {
         setUser(u);
+        setShowHomepage(false); // Already authenticated, skip homepage
       })
       .catch(() => {
         setToken("");
@@ -37,6 +41,7 @@ export default function App() {
     supabase.auth.signOut().catch(() => {});
     setToken("");
     setUser(null);
+    setShowHomepage(true); // Show homepage again after logout
   };
 
   if (loading) {
@@ -81,6 +86,18 @@ export default function App() {
   }
 
   if (!user) {
+    // Show the animated homepage first, then login when CTA clicked
+    if (showHomepage) {
+      return (
+        <>
+          <HomePage onEnter={() => setShowHomepage(false)} />
+          {/* Custom cursor for desktop */}
+          <div ref={glowRef} className="cursor-glow" />
+          <div ref={dotRef} className="cursor-dot" />
+        </>
+      );
+    }
+
     return (
       <>
         <Login onSuccess={(u) => setUser(u)} />
