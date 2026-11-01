@@ -689,15 +689,15 @@ export default function Timetable({ user }: { user: User }) {
         <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white border border-[#E8DCBE] rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-[#E8DEC8] pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#7B1123]/10 border border-[#7B1123]/25 flex items-center justify-center text-[#7B1123]">
-                  <Sparkles className="w-5 h-5 text-[#7B1123]" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-stone-900">
-                    Automated Timetable Generator
-                  </h3>
+            <div className="flex items-start justify-between border-b border-[#E8DEC8] pb-4">
+              <div className="flex flex-col gap-2">
+                <h3 className="text-base sm:text-lg font-black text-stone-900 tracking-tight">
+                  Automated Timetable Generator
+                </h3>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#7B1123]/10 border border-[#7B1123]/25 flex items-center justify-center text-[#7B1123] shrink-0">
+                    <Sparkles className="w-4.5 h-4.5 text-[#7B1123]" />
+                  </div>
                   <p className="text-xs text-stone-500">
                     Google OR-Tools CP-SAT Solver & Deterministic Feasibility Pre-Scan
                   </p>
