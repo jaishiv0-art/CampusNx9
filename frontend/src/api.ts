@@ -111,6 +111,8 @@ export type User = {
   faculty_id?: string;
   org?: string;
   permissions: string[];
+  full_name?: string;
+  email?: string;
 };
 
 export const DEMO_USERS = [

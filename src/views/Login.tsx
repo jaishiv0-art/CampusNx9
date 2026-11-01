@@ -272,9 +272,10 @@ export default function Login({ onSuccess }: LoginProps) {
       // -------------------------------------------------------------
       const loginIdentifier = cleanUsername || cleanEmail;
 
+      const demoUsernames = ROLES.map(r => r.demoUser);
       const isLikelyDemo =
-        demoUsers.includes(cleanUsername) ||
-        demoUsers.includes(cleanEmail.split("@")[0]) ||
+        demoUsernames.includes(cleanUsername) ||
+        demoUsernames.includes(cleanEmail.split("@")[0]) ||
         (cleanEmail.endsWith("@cit.ac.in") && ["admin", "coord", "fac", "club"].some(p => cleanUsername.startsWith(p)));
 
       // 1. For institutional demo personas, prioritize instant local backend login

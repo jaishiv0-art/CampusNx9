@@ -198,6 +198,57 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* --- Dynamic Animated Greeting Transitions (Slide-up + Fade + Subtle Blur) --- */
+@keyframes greeting-slide-up-in {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes greeting-slide-up-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px);
+    filter: blur(4px);
+  }
+}
+
+.greeting-slide-in {
+  animation: greeting-slide-up-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+.greeting-slide-out {
+  animation: greeting-slide-up-out 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+@keyframes greeting-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.greeting-gold-shimmer {
+  background: linear-gradient(90deg, #7B1123 0%, #B45309 30%, #D97706 50%, #7B1123 70%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: greeting-shimmer 6s linear infinite;
+}
+
 /* ==========================================================================
    3. SCROLL-REVEAL ANIMATION CLASSES (triggered by IntersectionObserver)
    ========================================================================== */

@@ -10,6 +10,7 @@ import {
   Layers
 } from "lucide-react";
 import { useStaggerReveal, useCountUp } from "../hooks/useAnimations";
+import DynamicGreeting from "../components/DynamicGreeting";
 
 interface RoleDashboardOverviewProps {
   user: User;
@@ -38,59 +39,8 @@ export default function RoleDashboardOverview({ user, onNavigateTab }: RoleDashb
 
   return (
     <div className="mb-6 space-y-4">
-      {/* Welcome Banner */}
-      <div
-        className="bg-white/95 rounded-2xl p-4 sm:p-5 border border-[#E8DCBE] shadow-xs relative overflow-hidden backdrop-blur-md"
-        style={{ animation: "fade-up 0.6s cubic-bezier(0.19,1,0.22,1) 0.1s both" }}
-      >
-        {/* Animated gradient accent */}
-        <div
-          className="absolute right-0 top-0 w-80 h-full pointer-events-none"
-          style={{
-            background: "linear-gradient(to left, rgba(123,17,35,0.06) 0%, transparent 60%)",
-            animation: "glow-breathe 6s ease-in-out infinite",
-          }}
-        />
-        {/* Decorative dot pattern */}
-        <div className="absolute right-4 top-4 w-20 h-20 dot-pattern opacity-30 rounded-lg" />
-
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-          <div>
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${badge.bg} ${badge.border} ${badge.text}`}
-                style={{ animation: "scale-in-bounce 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.3s both" }}
-              >
-                {badge.label}
-              </span>
-              <span className="text-xs text-stone-500 font-mono">
-                {user.department ? `Dept: ${user.department}` : user.org || "CIT Administration"}
-              </span>
-            </div>
-            <h2
-              className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight"
-              style={{ animation: "fade-right 0.7s cubic-bezier(0.19,1,0.22,1) 0.15s both" }}
-            >
-              Welcome back, <span className="text-[#7B1123]">{user.username}</span>
-            </h2>
-            <p
-              className="text-xs sm:text-sm text-stone-500 mt-0.5"
-              style={{ animation: "fade-up-subtle 0.6s cubic-bezier(0.19,1,0.22,1) 0.3s both" }}
-            >
-              Active Session · Connected to Chilika Institute of Technology Scheduling Engine
-            </p>
-          </div>
-
-          {/* Animated status indicator */}
-          <div
-            className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full"
-            style={{ animation: "scale-in 0.5s cubic-bezier(0.19,1,0.22,1) 0.5s both" }}
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-500" style={{ animation: "glow-pulse 2s ease-in-out infinite" }} />
-            <span className="text-[11px] font-semibold text-emerald-800">System Online</span>
-          </div>
-        </div>
-      </div>
+      {/* Dynamic Animated Greeting Banner */}
+      <DynamicGreeting user={user} />
 
       {/* Decorative separator with glow */}
       <div className="section-separator-glow" />
