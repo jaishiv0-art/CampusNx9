@@ -1,5 +1,8 @@
 import hashlib, json, os, secrets, sqlite3, threading, datetime as dt
-from . import config
+try:
+    from . import config
+except ImportError:
+    import config
 
 _lock = threading.RLock()
 _conn = None

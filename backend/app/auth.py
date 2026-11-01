@@ -1,6 +1,9 @@
 import time, jwt
 from fastapi import Depends, HTTPException, Header
-from . import config, store
+try:
+    from . import config, store
+except ImportError:
+    import config, store
 
 PERMS = {
     "ADMIN": {"*"},

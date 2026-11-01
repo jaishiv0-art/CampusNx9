@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { api, setToken, User } from "../api";
 import {
   supabase,
@@ -18,13 +18,6 @@ import {
   User as UserIcon,
   CheckCircle2,
   AlertCircle,
-  Calendar,
-  Layers,
-  Clock,
-  ShieldAlert,
-  ChevronDown,
-  Cpu,
-  RefreshCw,
   Award,
   Target,
   FileCheck,
@@ -32,18 +25,74 @@ import {
   Eye,
   EyeOff,
   KeyRound,
-  X
+  X,
+  ChevronDown,
+  ChevronUp,
+  ShieldAlert,
+  HelpCircle,
+  ExternalLink
 } from "lucide-react";
 
 interface LoginProps {
   onSuccess: (user: User) => void;
 }
 
+export const ROLES = [
+  {
+    id: "ADMIN",
+    title: "Dean's Office",
+    subtitle: "Master Administrator",
+    desc: "Full institutional governance: master CP-SAT solver, disruption approvals, official JSON exports & audit logs.",
+    icon: Shield,
+    badgeColor: "bg-[#7B1123]/10 text-[#7B1123] border-[#7B1123]/25",
+    accent: "text-[#7B1123]",
+    demoUser: "admin",
+    demoPass: "admin123",
+    defaultEmail: "dean.office@cit.ac.in"
+  },
+  {
+    id: "DEPARTMENT_COORDINATOR",
+    title: "Department Coordinator",
+    subtitle: "CSE Operations",
+    desc: "Departmental course & lab scheduling, room allocations, instructor workload balancing & faculty requests.",
+    icon: BookOpen,
+    badgeColor: "bg-amber-100 text-amber-900 border-amber-300",
+    accent: "text-amber-700",
+    demoUser: "coord_cse",
+    demoPass: "coord123",
+    defaultEmail: "coord.cse@cit.ac.in"
+  },
+  {
+    id: "FACULTY",
+    title: "Faculty Member",
+    subtitle: "Dr. Ananya Mishra (F01)",
+    desc: "Personalized weekly teaching timetable, unavailability declaration, and AI-assisted rescheduling requests.",
+    icon: GraduationCap,
+    badgeColor: "bg-stone-200 text-stone-800 border-stone-300",
+    accent: "text-stone-700",
+    demoUser: "fac_f01",
+    demoPass: "faculty123",
+    defaultEmail: "ananya.mishra@cit.ac.in"
+  },
+  {
+    id: "CLUB_REPRESENTATIVE",
+    title: "Club Representative",
+    subtitle: "Dramatics Society",
+    desc: "Spectra Fest venue requests, priority score evaluation, alternative slot recommendations & cancellation tracking.",
+    icon: Sparkles,
+    badgeColor: "bg-emerald-100 text-emerald-900 border-emerald-300",
+    accent: "text-emerald-700",
+    demoUser: "club_dramatics",
+    demoPass: "club123",
+    defaultEmail: "dramatics.society@cit.ac.in"
+  }
+];
+
 export default function Login({ onSuccess }: LoginProps) {
   // Tab: "signin" | "register"
   const [mode, setMode] = useState<"signin" | "register">("signin");
 
-  // Selected Role (1 of 4 institutional roles)
+  // Selected Role
   const [selectedRole, setSelectedRole] = useState("ADMIN");
 
   // Form Fields
@@ -58,6 +107,7 @@ export default function Login({ onSuccess }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [infoMsg, setInfoMsg] = useState("");
+  const [showMobileDetails, setShowMobileDetails] = useState(false);
 
   // Password Reset Modal State
   const [showResetModal, setShowResetModal] = useState(false);
@@ -66,61 +116,12 @@ export default function Login({ onSuccess }: LoginProps) {
   const [resetMsg, setResetMsg] = useState("");
   const [resetErr, setResetErr] = useState("");
 
-  const roles = [
-    {
-      id: "ADMIN",
-      title: "Dean's Office",
-      subtitle: "Master Administrator",
-      desc: "Full institutional governance: master CP-SAT solver, disruption approvals, official JSON exports & audit logs.",
-      icon: Shield,
-      badgeColor: "bg-[#7B1123]/10 text-[#7B1123] border-[#7B1123]/25",
-      accent: "text-[#7B1123]",
-      demoUser: "admin",
-      demoPass: "admin123",
-      defaultEmail: "dean.office@cit.ac.in"
-    },
-    {
-      id: "DEPARTMENT_COORDINATOR",
-      title: "Department Coordinator",
-      subtitle: "CSE Operations",
-      desc: "Departmental course & lab scheduling, room allocations, instructor workload balancing & faculty requests.",
-      icon: BookOpen,
-      badgeColor: "bg-amber-100 text-amber-900 border-amber-300",
-      accent: "text-amber-700",
-      demoUser: "coord_cse",
-      demoPass: "coord123",
-      defaultEmail: "coord.cse@cit.ac.in"
-    },
-    {
-      id: "FACULTY",
-      title: "Faculty Member",
-      subtitle: "Dr. Ananya Mishra (F01)",
-      desc: "Personalized weekly teaching timetable, unavailability declaration, and AI-assisted rescheduling requests.",
-      icon: GraduationCap,
-      badgeColor: "bg-stone-200 text-stone-800 border-stone-300",
-      accent: "text-stone-700",
-      demoUser: "fac_f01",
-      demoPass: "faculty123",
-      defaultEmail: "ananya.mishra@cit.ac.in"
-    },
-    {
-      id: "CLUB_REPRESENTATIVE",
-      title: "Club Representative",
-      subtitle: "Dramatics Society",
-      desc: "Spectra Fest venue requests, priority score evaluation, alternative slot recommendations & cancellation tracking.",
-      icon: Sparkles,
-      badgeColor: "bg-emerald-100 text-emerald-900 border-emerald-300",
-      accent: "text-emerald-700",
-      demoUser: "club_dramatics",
-      demoPass: "club123",
-      defaultEmail: "dramatics.society@cit.ac.in"
-    }
-  ];
-
-  const currentRoleInfo = roles.find((r) => r.id === selectedRole) || roles[0];
+  const currentRoleInfo = useMemo(() => {
+    return ROLES.find((r) => r.id === selectedRole) || ROLES[0];
+  }, [selectedRole]);
 
   const handleRoleDropdownChange = (roleId: string) => {
-    const r = roles.find((item) => item.id === roleId);
+    const r = ROLES.find((item) => item.id === roleId);
     if (!r) return;
     setSelectedRole(r.id);
     setErr("");
@@ -141,16 +142,13 @@ export default function Login({ onSuccess }: LoginProps) {
     if (newMode === "register") {
       if (selectedRole === "ADMIN") {
         setSelectedRole("FACULTY");
-        const fac = roles.find((r) => r.id === "FACULTY");
-        if (fac) {
-          setUsername("");
-          setPassword("");
-          setEmail("");
-        }
+        setUsername("");
+        setPassword("");
+        setEmail("");
       }
     } else {
       // Re-fill demo info for current role
-      const r = roles.find((item) => item.id === selectedRole) || roles[0];
+      const r = ROLES.find((item) => item.id === selectedRole) || ROLES[0];
       setUsername(r.demoUser);
       setPassword(r.demoPass);
       setEmail(r.defaultEmail);
@@ -172,7 +170,6 @@ export default function Login({ onSuccess }: LoginProps) {
       // REGISTRATION FLOW
       // -------------------------------------------------------------
       if (mode === "register") {
-        // Enforce institutional rule: Never allow user to self-assign Admin privileges
         if (selectedRole === "ADMIN") {
           throw new Error(
             "Institutional Security Rule: Dean's Office (Master Administrator) accounts cannot be self-registered. Please select Faculty Member, Department Coordinator, or Club Representative."
@@ -200,7 +197,6 @@ export default function Login({ onSuccess }: LoginProps) {
           selectedRole === "CLUB_REPRESENTATIVE" ? clubName.trim() || "Student Club" : "CIT";
 
         if (isSupabaseConfigured()) {
-          // 1. Supabase signUp() with user metadata
           const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
             email: cleanEmail,
             password: cleanPass,
@@ -221,7 +217,6 @@ export default function Login({ onSuccess }: LoginProps) {
             throw new Error(signUpErr.message);
           }
 
-          // 2. Ensure public.profiles record is created with approval_status = 'pending'
           if (signUpData?.user) {
             try {
               await supabase.from("profiles").upsert({
@@ -240,7 +235,6 @@ export default function Login({ onSuccess }: LoginProps) {
             }
           }
 
-          // 3. Best-effort registration into backend store for joins
           await api("/admin/users", "POST", {
             username: cleanUsername,
             password: cleanPass,
@@ -256,7 +250,6 @@ export default function Login({ onSuccess }: LoginProps) {
           setMode("signin");
           return;
         } else {
-          // Local development fallback without active Supabase credentials
           await api("/admin/users", "POST", {
             username: cleanUsername,
             password: cleanPass,
@@ -277,42 +270,85 @@ export default function Login({ onSuccess }: LoginProps) {
       // -------------------------------------------------------------
       // SIGN IN FLOW
       // -------------------------------------------------------------
-      const isDemoAccount = ["admin", "coord_cse", "fac_f01", "club_dramatics"].includes(
-        cleanUsername
-      );
+      const demoUsers = [
+        "admin", "dean.office", "dean_office", "dean",
+        "coord_cse", "coord.cse", "coord_ece", "coord.ece", "coord_me", "coord.me",
+        "club_dramatics", "dramatics.society", "club_robotics", "robotics.club",
+        "fac_f01", "ananya.mishra"
+      ];
 
-      // If Supabase is configured and not an offline demo user, authenticate via Supabase
-      if (isSupabaseConfigured() && !isDemoAccount) {
+      const isLikelyDemo =
+        demoUsers.includes(cleanUsername) ||
+        demoUsers.includes(cleanEmail.split("@")[0]) ||
+        (cleanEmail.endsWith("@cit.ac.in") && ["admin", "coord", "fac", "club"].some(p => cleanUsername.startsWith(p)));
+
+      // 1. For institutional demo personas, prioritize instant local backend login
+      if (isLikelyDemo) {
+        try {
+          const loginIdentifier = cleanUsername || cleanEmail;
+          const res = await api("/auth/login", "POST", {
+            username: loginIdentifier,
+            password: cleanPass
+          });
+
+          setToken(res.token);
+          const me = await api<User>("/me");
+          if (onSuccess) onSuccess(me);
+          return;
+        } catch (demoErr: any) {
+          if (!isSupabaseConfigured()) {
+            throw demoErr;
+          }
+        }
+      }
+
+      // 2. Supabase Auth flow for registered institutional users
+      if (isSupabaseConfigured()) {
         const targetEmail = cleanEmail.includes("@")
           ? cleanEmail
           : cleanUsername.includes("@")
           ? cleanUsername
           : `${cleanUsername}@cit.ac.in`;
 
-        // 1. Authenticate using Supabase signInWithPassword()
         const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
           email: targetEmail,
           password: cleanPass
         });
 
         if (authErr) {
-          const errMsg = authErr.message || "";
-          if (
-            errMsg.toLowerCase().includes("email not confirmed") ||
-            errMsg.toLowerCase().includes("email not verified")
-          ) {
+          // If Supabase sign-in failed, attempt direct API login as secondary fallback
+          try {
+            const res = await api("/auth/login", "POST", {
+              username: cleanUsername || cleanEmail,
+              password: cleanPass
+            });
+            setToken(res.token);
+            const me = await api<User>("/me");
+            if (onSuccess) onSuccess(me);
+            return;
+          } catch {
+            const errMsg = authErr.message || "";
+            if (
+              errMsg.toLowerCase().includes("email not confirmed") ||
+              errMsg.toLowerCase().includes("email not verified")
+            ) {
+              throw new Error(
+                `Institutional email not verified. Please check your inbox at ${targetEmail} and click the confirmation link before logging in.`
+              );
+            }
             throw new Error(
-              `Institutional email not verified. Please check your inbox at ${targetEmail} and click the verification link before logging in.`
+              errMsg.toLowerCase().includes("invalid login credentials")
+                ? `Bad credentials: Password or email does not match. For demo access use ${currentRoleInfo.demoUser} / ${currentRoleInfo.demoPass} or click the 1-Click Demo buttons below.`
+                : (errMsg || "Authentication failed. Please verify credentials.")
             );
           }
-          throw new Error(errMsg || "Invalid institutional email or password.");
         }
 
         if (!authData.user || !authData.session) {
           throw new Error("Supabase authentication failed. No active session returned.");
         }
 
-        // 2. Enforce email confirmation check on the authenticated user object
+        // Enforce email verification check
         if (!authData.user.email_confirmed_at && !(authData.user as any).confirmed_at) {
           await supabase.auth.signOut();
           throw new Error(
@@ -320,43 +356,28 @@ export default function Login({ onSuccess }: LoginProps) {
           );
         }
 
-        // 3. Fetch authenticated user's profile from public.profiles
+        // Fetch profile
         const profile = await fetchUserProfile(authData.user.id);
-
         if (!profile) {
           await supabase.auth.signOut();
           throw new Error(
-            "Institutional profile record not found. Please contact the Dean's Office for profile initialization."
+            "Institutional profile record not found. Please contact Dean's Office for profile initialization."
           );
         }
 
-        // 4. Verify that the supplied username matches the authenticated user's profile
-        if (cleanUsername && profile.username) {
-          const suppliedUser = cleanUsername.split("@")[0].trim().toLowerCase();
-          const profileUser = profile.username.trim().toLowerCase();
-          if (suppliedUser !== profileUser) {
-            await supabase.auth.signOut();
-            throw new Error(
-              `Username mismatch: The supplied username "${username}" does not match the registered profile handle "${profile.username}".`
-            );
-          }
-        }
-
-        // 5. Check profile approval_status
         if (profile.approval_status === "rejected") {
           await supabase.auth.signOut();
           throw new Error(
-            "Account Registration Rejected: Your institutional account request was declined by the Dean's Office. Please contact administration."
+            "Account Registration Rejected: Your institutional account request was declined by the Dean's Office."
           );
         }
         if (profile.approval_status !== "approved") {
           await supabase.auth.signOut();
           throw new Error(
-            `Account Pending Approval: Your email is verified, but your account is currently "${profile.approval_status}". Dean's Office approval is required before logging in.`
+            `Account Pending Approval: Your email is verified, but your account is currently "${profile.approval_status}". Dean's Office approval is required.`
           );
         }
 
-        // 6. Check active account status
         if (profile.active === false) {
           await supabase.auth.signOut();
           throw new Error(
@@ -364,16 +385,13 @@ export default function Login({ onSuccess }: LoginProps) {
           );
         }
 
-        // 7. Set Supabase access token for subsequent backend API requests
         setToken(authData.session.access_token);
-
-        // 8. Call /me endpoint which verifies the token and returns authorized role
         const me = await api<User>("/me");
         if (onSuccess) onSuccess(me);
         return;
       }
 
-      // Local / Instant Demo Account Login Fallback
+      // 3. Local direct login fallback
       const loginIdentifier = cleanUsername || cleanEmail;
       const res = await api("/auth/login", "POST", {
         username: loginIdentifier,
@@ -390,14 +408,12 @@ export default function Login({ onSuccess }: LoginProps) {
     }
   };
 
-  const handleQuickDemoLogin = (r: (typeof roles)[0]) => {
+  const handleQuickDemoLogin = (r: (typeof ROLES)[0]) => {
     setSelectedRole(r.id);
     setUsername(r.demoUser);
     setPassword(r.demoPass);
     setEmail(r.defaultEmail);
-    setTimeout(() => {
-      handleDirectLogin(r.demoUser, r.demoPass);
-    }, 50);
+    handleDirectLogin(r.demoUser, r.demoPass);
   };
 
   const handleDirectLogin = async (u: string, p: string) => {
@@ -429,12 +445,19 @@ export default function Login({ onSuccess }: LoginProps) {
       if (!resetEmail.trim() || !resetEmail.includes("@")) {
         throw new Error("Please enter a valid institutional email address.");
       }
-      await sendPasswordResetEmail(resetEmail.trim());
-      setResetMsg(
-        `Password reset link has been dispatched to ${resetEmail.trim()}. Please check your inbox.`
-      );
-    } catch (resetError: any) {
-      setResetErr(resetError.message || "Failed to send password reset email.");
+
+      if (isSupabaseConfigured()) {
+        await sendPasswordResetEmail(resetEmail.trim());
+        setResetMsg(
+          `Password reset instructions have been dispatched to ${resetEmail}. Check your institutional mailbox.`
+        );
+      } else {
+        setResetMsg(
+          `Local environment: Default password for demo roles is "admin123", "coord123", "faculty123", or "club123".`
+        );
+      }
+    } catch (err: any) {
+      setResetErr(err.message || "Failed to initiate password reset.");
     } finally {
       setResetLoading(false);
     }
@@ -474,19 +497,19 @@ export default function Login({ onSuccess }: LoginProps) {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <div className="grid lg:grid-cols-12 gap-8 items-start">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
+        <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           
           {/* =========================================================================
-              LEFT COLUMN: AUTHENTICATION & ROLE ACCESS FORM (LIGHT WHITE-YELLOWISH THEME)
+              LEFT COLUMN: AUTHENTICATION & ROLE ACCESS FORM
               ========================================================================= */}
-          <div className="lg:col-span-5 flex flex-col space-y-6">
+          <div className="lg:col-span-5 flex flex-col space-y-5">
             
             {/* Primary Login Card */}
-            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-6 sm:p-8 backdrop-blur-sm">
+            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm">
               
               {/* Header inside Card */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-5">
                 <div>
                   <div className="text-[11px] font-bold uppercase tracking-wider text-[#7B1123]">
                     Institutional Portal
@@ -525,10 +548,10 @@ export default function Login({ onSuccess }: LoginProps) {
 
               {/* Error Alert */}
               {err && (
-                <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex flex-col gap-2">
+                <div className="mb-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex flex-col gap-2">
                   <div className="flex items-center gap-2.5">
                     <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                    <span className="font-medium">{err}</span>
+                    <span className="font-medium leading-snug">{err}</span>
                   </div>
                   {err.toLowerCase().includes("not verified") && (
                     <button
@@ -544,91 +567,80 @@ export default function Login({ onSuccess }: LoginProps) {
                       }}
                       className="text-[11px] font-bold text-[#7B1123] hover:underline text-left pl-6"
                     >
-                      Resend Verification Email →
+                      Resend Verification Link →
                     </button>
                   )}
                 </div>
               )}
 
-              {/* Success Info Banner */}
+              {/* Info / Success Alert */}
               {infoMsg && (
-                <div className="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                <div className="mb-4 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                   <span className="font-medium">{infoMsg}</span>
                 </div>
               )}
 
               {/* Institutional Rule Notice Banner */}
-              <div className="mb-5 p-3 rounded-xl bg-[#FFFBF2] border border-[#F0E2C8] text-amber-950 text-xs flex items-start gap-2.5">
-                <ShieldAlert className="w-4 h-4 text-[#7B1123] shrink-0 mt-0.5" />
-                <div className="leading-snug">
-                  <strong className="text-[#7B1123]">Institutional Governance Rule:</strong> Nobody can approve their own booking or change request. Cross-role verification strictly enforced by backend.
-                </div>
+              <div className="mb-5 p-3 rounded-xl bg-[#FAF5ED] border border-[#E8DEC8] flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-[#7B1123] shrink-0 mt-0.5" />
+                <p className="text-xs text-stone-700 leading-snug">
+                  <strong>Institutional Governance Rule:</strong> Nobody can approve their own booking or change request; cross-role verification strictly enforced by backend.
+                </p>
               </div>
 
-              {/* Notice for Dean's Office in Register Mode */}
-              {mode === "register" && selectedRole === "ADMIN" && (
-                <div className="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
-                  <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                  <div className="leading-snug">
-                    <strong className="text-rose-700">Administrative Provisioning Policy:</strong> Dean's Office (Master Administrator) accounts are centrally issued by the CIT Board. Self-registration is restricted. Please select <em>Faculty Member</em>, <em>Department Coordinator</em>, or <em>Club Representative</em>.
-                  </div>
-                </div>
-              )}
-
-              {/* 1. ROLE SELECTION DROPDOWN */}
-              <div className="mb-5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="role-dropdown-select"
-                    className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5"
-                  >
-                    <RoleIcon className={`w-4 h-4 ${currentRoleInfo.accent}`} />
-                    Select Institutional Role
-                  </label>
-                  {mode === "signin" && (
-                    <span className="text-[11px] text-[#7B1123] font-semibold">
-                      Auto-fills credentials
-                    </span>
-                  )}
-                </div>
-
-                <div className="relative">
-                  <select
-                    id="role-dropdown-select"
-                    value={selectedRole}
-                    onChange={(e) => handleRoleDropdownChange(e.target.value)}
-                    className="w-full appearance-none bg-[#FFFEFC] border border-[#D8C7B5] hover:border-[#7B1123] focus:border-[#7B1123] focus:ring-2 focus:ring-[#7B1123]/15 rounded-xl px-4 py-3 text-sm font-semibold text-stone-900 outline-none transition-all cursor-pointer shadow-sm pr-10"
-                  >
-                    {roles.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.title} — {r.subtitle}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-stone-500 absolute right-3.5 top-3.5 pointer-events-none" />
-                </div>
-
-                {/* Role Description Badge */}
-                <div className="p-3 rounded-xl bg-[#FAF5ED] border border-[#EADBCA] flex items-start gap-3 text-xs">
-                  <div
-                    className={`w-8 h-8 rounded-lg ${currentRoleInfo.badgeColor} flex items-center justify-center shrink-0 border`}
-                  >
-                    <RoleIcon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-stone-900">
-                      {currentRoleInfo.title} ({currentRoleInfo.subtitle})
-                    </div>
-                    <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">
-                      {currentRoleInfo.desc}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. AUTHENTICATION FORM */}
+              {/* Form Content */}
               <form onSubmit={handleSubmit} className="space-y-4">
+                
+                {/* 1. ROLE SELECTOR */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-stone-700 flex items-center gap-1.5 uppercase tracking-wide">
+                      <Shield className="w-3.5 h-3.5 text-[#7B1123]" />
+                      Select Institutional Role
+                    </label>
+                    {mode === "signin" && (
+                      <span className="text-[10px] text-stone-500 font-medium">Auto-fills credentials</span>
+                    )}
+                  </div>
+                  
+                  <div className="relative">
+                    <select
+                      value={selectedRole}
+                      onChange={(e) => handleRoleDropdownChange(e.target.value)}
+                      className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-stone-900 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none appearance-none transition-all pr-10 cursor-pointer shadow-xs"
+                    >
+                      {ROLES.map((r) => (
+                        <option
+                          key={r.id}
+                          value={r.id}
+                          disabled={mode === "register" && r.id === "ADMIN"}
+                        >
+                          {r.title} — {r.subtitle} {mode === "register" && r.id === "ADMIN" ? "(Cannot Self-Register)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-stone-500 absolute right-3.5 top-3.5 pointer-events-none" />
+                  </div>
+
+                  {/* Active Role Explainer Card */}
+                  <div className="mt-2.5 p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DEC8] flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-white border border-[#E8DEC8] shadow-2xs text-[#7B1123] shrink-0">
+                      <RoleIcon className="w-4 h-4" />
+                    </div>
+                    <div className="text-xs">
+                      <div className="font-bold text-stone-900 flex items-center gap-2">
+                        <span>{currentRoleInfo.title}</span>
+                        <span className="font-normal text-stone-500 font-mono text-[11px]">({currentRoleInfo.subtitle})</span>
+                      </div>
+                      <p className="text-stone-600 text-[11px] mt-0.5 leading-snug">
+                        {currentRoleInfo.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. REGISTRATION-ONLY FIELDS */}
                 {mode === "register" && (
                   <div>
                     <label className="block text-xs font-semibold text-stone-700 mb-1">
@@ -640,7 +652,7 @@ export default function Login({ onSuccess }: LoginProps) {
                         required
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        placeholder="e.g. Dr. Ananya Mishra"
+                        placeholder="Dr. Rajesh Sharma"
                         className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
                       />
                       <UserIcon className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
@@ -659,9 +671,19 @@ export default function Login({ onSuccess }: LoginProps) {
                       required
                       value={email}
                       onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (mode === "register" || !username) {
-                          setUsername(e.target.value.split("@")[0]);
+                        const val = e.target.value;
+                        setEmail(val);
+                        if (mode === "signin") {
+                          const matched = ROLES.find(r => r.defaultEmail.toLowerCase() === val.toLowerCase());
+                          if (matched) {
+                            setSelectedRole(matched.id);
+                            setUsername(matched.demoUser);
+                            setPassword(matched.demoPass);
+                          } else if (val.includes("@")) {
+                            setUsername(val.split("@")[0]);
+                          }
+                        } else {
+                          setUsername(val.split("@")[0]);
                         }
                       }}
                       placeholder="user@cit.ac.in"
@@ -689,7 +711,7 @@ export default function Login({ onSuccess }: LoginProps) {
                   </div>
                 </div>
 
-                {/* Department / Org Fields (Contextual for Coordinator / Faculty / Club) */}
+                {/* Contextual Academic Department / Org Fields */}
                 {mode === "register" && (selectedRole === "DEPARTMENT_COORDINATOR" || selectedRole === "FACULTY") && (
                   <div>
                     <label className="block text-xs font-semibold text-stone-700 mb-1">
@@ -727,18 +749,34 @@ export default function Login({ onSuccess }: LoginProps) {
                   </div>
                 )}
 
-                {/* Password */}
+                {/* Password with Eye Toggle and Auto-Fill Helper */}
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Password
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-stone-700">
+                      Password
+                    </label>
+                    {mode === "signin" && (
+                      <button
+                        type="button"
+                        onClick={() => setPassword(currentRoleInfo.demoPass)}
+                        className="text-[11px] font-semibold text-[#7B1123] hover:underline flex items-center gap-1"
+                        title="Click to reset password to the persona default"
+                      >
+                        <span>Default:</span>
+                        <span className="font-mono bg-[#7B1123]/10 px-1 py-0.2 rounded border border-[#7B1123]/20 font-bold">
+                          {currentRoleInfo.demoPass}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       required
+                      autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder="Enter password"
                       className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 pr-10 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all font-mono"
                     />
                     <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
@@ -755,7 +793,7 @@ export default function Login({ onSuccess }: LoginProps) {
                   {/* Forgot Password Link in Signin Mode */}
                   {mode === "signin" && (
                     <div className="flex items-center justify-between text-xs mt-1.5">
-                      <span className="text-stone-500">Institutional Access Help</span>
+                      <span className="text-stone-500">Need account assistance?</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -764,10 +802,9 @@ export default function Login({ onSuccess }: LoginProps) {
                           setResetErr("");
                           setShowResetModal(true);
                         }}
-                        className="text-[#7B1123] font-semibold hover:underline flex items-center gap-1"
+                        className="text-[#7B1123] hover:underline font-semibold"
                       >
-                        <KeyRound className="w-3 h-3 text-[#7B1123]" />
-                        Forgot password?
+                        Forgot Password?
                       </button>
                     </div>
                   )}
@@ -777,7 +814,7 @@ export default function Login({ onSuccess }: LoginProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 px-4 rounded-xl text-sm font-bold bg-[#7B1123] hover:bg-[#640E1C] active:bg-[#520A16] text-white shadow-lg shadow-amber-950/15 hover:shadow-amber-950/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-3"
+                  className="w-full py-3 px-4 rounded-xl text-sm font-bold bg-[#7B1123] hover:bg-[#640E1C] active:bg-[#520A16] text-white shadow-lg shadow-amber-950/15 hover:shadow-amber-950/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-2 cursor-pointer"
                 >
                   {loading ? (
                     "Authenticating CIT User..."
@@ -795,24 +832,24 @@ export default function Login({ onSuccess }: LoginProps) {
               </form>
 
               {/* 3. QUICK 1-CLICK DEMO LOGIN BUTTONS */}
-              <div className="mt-6 pt-5 border-t border-[#E8DEC8]">
-                <div className="flex items-center justify-between mb-2.5">
+              <div className="mt-5 pt-4 border-t border-[#E8DEC8]">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-bold text-stone-700 uppercase tracking-wider">
-                    Instant Demo Login (Judges & Evaluators)
+                    Instant Demo Login (1-Click)
                   </span>
                   <span className="text-[10px] text-stone-500 font-semibold bg-[#FAF5ED] px-2 py-0.5 rounded border border-[#E8DEC8]">
-                    1-Click Access
+                    Zero Typing Required
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {roles.map((r) => (
+                  {ROLES.map((r) => (
                     <button
                       key={r.id}
                       type="button"
                       onClick={() => handleQuickDemoLogin(r)}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 ${
+                      className={`p-2.5 rounded-xl border text-xs font-semibold transition-all text-left flex items-center gap-2 cursor-pointer ${
                         selectedRole === r.id
-                          ? "bg-[#7B1123]/10 border-[#7B1123] text-[#7B1123]"
+                          ? "bg-[#7B1123]/10 border-[#7B1123] text-[#7B1123] shadow-xs"
                           : "border-[#E8DEC8] hover:border-[#7B1123]/40 bg-[#FAF7F2] hover:bg-white text-stone-800"
                       }`}
                     >
@@ -828,6 +865,21 @@ export default function Login({ onSuccess }: LoginProps) {
 
             </div>
 
+            {/* Mobile View Accordion Toggle */}
+            <div className="lg:hidden">
+              <button
+                type="button"
+                onClick={() => setShowMobileDetails(!showMobileDetails)}
+                className="w-full py-2.5 px-4 bg-white/90 border border-[#E8DCBE] rounded-xl text-xs font-bold text-stone-700 flex items-center justify-between shadow-xs"
+              >
+                <span className="flex items-center gap-2 text-[#7B1123]">
+                  <Target className="w-4 h-4" />
+                  <span>Platform Objectives & Solver Rules</span>
+                </span>
+                {showMobileDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+            </div>
+
             {/* Security Certification Footnote */}
             <div className="text-center text-xs text-stone-500">
               Chilika Institute of Technology · CampusNx9 Protected Governance Infrastructure
@@ -837,7 +889,7 @@ export default function Login({ onSuccess }: LoginProps) {
           {/* =========================================================================
               RIGHT COLUMN: CIT BANNER PICTURE & DETAILED SYSTEM OVERVIEW
               ========================================================================= */}
-          <div className="lg:col-span-7 flex flex-col space-y-6">
+          <div className={`lg:col-span-7 flex flex-col space-y-6 ${showMobileDetails ? "block" : "hidden lg:flex"}`}>
             
             {/* 1. CIT LOGO & CAMPUS BANNER PICTURE */}
             <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-3 sm:p-4 overflow-hidden backdrop-blur-sm">
@@ -845,7 +897,9 @@ export default function Login({ onSuccess }: LoginProps) {
                 <img
                   src="/cit_banner.png"
                   alt="Chilika Institute of Technology (CIT) Official Banner"
-                  className="w-full h-auto object-cover max-h-[380px] hover:scale-[1.01] transition-transform duration-500"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-auto object-cover max-h-[360px] hover:scale-[1.01] transition-transform duration-500"
                 />
                 {/* Floating Institutional Badge */}
                 <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#E0D2C0] shadow-md flex items-center gap-2 text-xs font-bold text-[#7B1123]">
@@ -856,7 +910,7 @@ export default function Login({ onSuccess }: LoginProps) {
             </div>
 
             {/* 2. OBJECTIVE OF THE PLATFORM */}
-            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-6 sm:p-8 backdrop-blur-sm space-y-4">
+            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm space-y-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#7B1123]/10 border border-[#7B1123]/20 flex items-center justify-center text-[#7B1123]">
                   <Target className="w-4 h-4" />
@@ -902,7 +956,7 @@ export default function Login({ onSuccess }: LoginProps) {
                     Lunch Break Protected
                   </div>
                   <p className="text-xs text-stone-600 leading-snug">
-                    Period 4 (12:45 – 13:45) is institutional lunch hour. Zero academic sessions or mandatory events are ever scheduled.
+                    Period 5 to 6 transition (13:00 – 14:00) is institutional lunch hour. Zero academic sessions or mandatory events are ever scheduled.
                   </p>
                 </div>
 
@@ -919,7 +973,7 @@ export default function Login({ onSuccess }: LoginProps) {
             </div>
 
             {/* 3. HARD & SOFT CONSTRAINTS BREAKDOWN */}
-            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-6 sm:p-8 backdrop-blur-sm space-y-5">
+            <div className="bg-white/95 rounded-2xl border border-[#E8DCBE] shadow-xl shadow-amber-900/5 p-5 sm:p-7 backdrop-blur-sm space-y-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#7B1123]/10 border border-[#7B1123]/20 flex items-center justify-center text-[#7B1123]">
                   <FileCheck className="w-4 h-4" />
@@ -948,19 +1002,19 @@ export default function Login({ onSuccess }: LoginProps) {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-600 mt-1.5 shrink-0" />
-                      <span><strong>Student Group Integrity:</strong> A batch (e.g. CSE_A) can never have conflicting concurrent classes.</span>
+                      <span><strong>Batch Integrity:</strong> Student batches cannot be scheduled in two places simultaneously.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-600 mt-1.5 shrink-0" />
-                      <span><strong>Lab Block Integrity:</strong> Practical labs require 2 continuous periods without break.</span>
+                      <span><strong>Room Type Match:</strong> Physics labs in Physics Lab only; Computer labs in Computer Centre.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-600 mt-1.5 shrink-0" />
-                      <span><strong>Lunch Break Sanctuary:</strong> Period 4 is completely locked against academic scheduling.</span>
+                      <span><strong>Capacity Bound:</strong> Room capacity must meet or exceed registered session batch size.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-600 mt-1.5 shrink-0" />
-                      <span><strong>Room Suitability:</strong> Lab sessions strictly scheduled into designated laboratory rooms with required equipment.</span>
+                      <span><strong>Unavailability Windows:</strong> Declared professor medical or research leave is strictly respected.</span>
                     </li>
                   </ul>
                 </div>
@@ -968,29 +1022,29 @@ export default function Login({ onSuccess }: LoginProps) {
                 {/* Soft Constraints Box */}
                 <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-2.5">
                   <div className="flex items-center gap-2 text-xs font-bold text-amber-900 uppercase tracking-wider">
-                    <Target className="w-4 h-4 text-amber-700" />
-                    Soft Constraints (Cost Minimized)
+                    <Award className="w-4 h-4 text-amber-700" />
+                    Soft Constraints (Penalty Minimize)
                   </div>
                   <ul className="text-xs text-stone-700 space-y-2">
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mt-1.5 shrink-0" />
-                      <span><strong>Workload Spread:</strong> Maximum 4 teaching periods per day per professor to prevent burnout.</span>
+                      <span><strong>Min Student Gaps:</strong> Reduces idle waiting hours between classes for student batches.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mt-1.5 shrink-0" />
-                      <span><strong>Preferred Slots:</strong> Early morning vs afternoon preferences weighed according to department policy.</span>
+                      <span><strong>Workload Spread:</strong> Distributes lectures evenly across Monday to Friday.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mt-1.5 shrink-0" />
-                      <span><strong>Campus Travel Buffer:</strong> Minimum 1 period between Main Campus and North Annex buildings.</span>
+                      <span><strong>Faculty Preferred Slots:</strong> Accommodates preferred morning or afternoon slots where possible.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mt-1.5 shrink-0" />
-                      <span><strong>Student Gap Minimization:</strong> Unproductive idle gaps between lectures kept below 1 period.</span>
+                      <span><strong>Venue Utilization:</strong> Optimizes large auditoriums and specialized lab room efficiency.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mt-1.5 shrink-0" />
-                      <span><strong>Extracurricular Shielding:</strong> Wednesday afternoon period 6–7 prioritized for clubs and society events.</span>
+                      <span><strong>Minimal Disruptions:</strong> Prioritizes minimal displacement during ad-hoc venue booking requests.</span>
                     </li>
                   </ul>
                 </div>
@@ -1002,65 +1056,64 @@ export default function Login({ onSuccess }: LoginProps) {
         </div>
       </main>
 
-      {/* =========================================================================
-          PASSWORD RESET MODAL
-          ========================================================================= */}
+      {/* Password Reset Modal */}
       {showResetModal && (
-        <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E8DCBE] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-[#FAF7F2] rounded-2xl border border-[#E8DEC8] max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[#E8DEC8] pb-3">
-              <div className="flex items-center gap-2 text-stone-900">
-                <div className="w-8 h-8 rounded-lg bg-[#7B1123]/10 border border-[#7B1123]/25 flex items-center justify-center text-[#7B1123]">
-                  <KeyRound className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black">Reset Account Password</h3>
-                  <p className="text-[11px] text-stone-500">Chilika Institute of Technology</p>
-                </div>
+              <div className="flex items-center gap-2 text-stone-900 font-bold text-base">
+                <KeyRound className="w-5 h-5 text-[#7B1123]" />
+                Institutional Password Reset
               </div>
               <button
                 type="button"
                 onClick={() => setShowResetModal(false)}
-                className="p-1 rounded-lg text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-colors"
-                aria-label="Close"
+                className="text-stone-400 hover:text-stone-700 p-1 rounded-lg"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <p className="text-xs text-stone-600 leading-relaxed">
-              Enter your registered institutional email address. If an account is associated with this email, Supabase will dispatch a secure password reset link.
+              Enter your registered institutional email address. If configured with Supabase, an official password recovery link will be sent to your inbox.
             </p>
 
             {resetErr && (
               <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
                 <span>{resetErr}</span>
               </div>
             )}
 
             {resetMsg && (
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                 <span>{resetMsg}</span>
               </div>
             )}
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <form onSubmit={handleResetPassword} className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  Institutional Email (@cit.ac.in)
+                  Institutional Email Address
                 </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    required
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    placeholder="user@cit.ac.in"
-                    className="w-full bg-[#FFFEFC] border border-[#D8C7B5] rounded-xl px-3 py-2.5 pl-9 text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none transition-all"
-                  />
-                  <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                <input
+                  type="email"
+                  required
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="dean.office@cit.ac.in"
+                  className="w-full bg-white border border-[#D8C7B5] rounded-xl px-3 py-2 text-xs text-stone-900 focus:ring-2 focus:ring-[#7B1123]/20 focus:border-[#7B1123] outline-none"
+                />
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-[#FAF5ED] border border-[#E8DEC8] text-[11px] text-stone-600">
+                <strong>Default Demo Passwords:</strong>
+                <div className="grid grid-cols-2 gap-1 mt-1 font-mono text-[10px]">
+                  <div>Admin: admin123</div>
+                  <div>Coordinator: coord123</div>
+                  <div>Faculty: faculty123</div>
+                  <div>Club: club123</div>
                 </div>
               </div>
 
@@ -1068,22 +1121,36 @@ export default function Login({ onSuccess }: LoginProps) {
                 <button
                   type="button"
                   onClick={() => setShowResetModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-all"
+                  className="px-3.5 py-1.5 rounded-lg border border-stone-300 text-xs font-semibold text-stone-700 hover:bg-stone-100"
                 >
-                  Cancel
+                  Close
                 </button>
                 <button
                   type="submit"
                   disabled={resetLoading}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#7B1123] text-white hover:bg-[#640E1C] active:bg-[#520A16] shadow-sm disabled:opacity-50 transition-all flex items-center gap-1.5"
+                  className="px-4 py-1.5 rounded-lg bg-[#7B1123] text-white text-xs font-bold hover:bg-[#640E1C] disabled:opacity-50"
                 >
-                  {resetLoading ? "Sending Link..." : "Send Reset Link"}
+                  {resetLoading ? "Dispatching..." : "Send Reset Link"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="border-t border-[#E8DEC8] bg-[#FAF5ED] py-4 px-4 sm:px-8 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-2">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-stone-800">CampusNx9</span>
+            <span>·</span>
+            <span>Chilika Institute of Technology</span>
+          </div>
+          <div className="text-[11px] text-stone-500">
+            Automated Academic Scheduling & Venue Resource Optimization Engine
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
